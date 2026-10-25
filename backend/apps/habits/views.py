@@ -1,0 +1,78 @@
+from rest_framework import viewsets, status
+from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from django.utils import timezone
+from django.db import IntegrityError
+from .models import Habit, HabitCompletion
+from .serializers import HabitSerializer, HabitListSerializer, HabitCompletionSerializer
+
+
+class HabitViewSet(viewsets.ModelViewSet):
+    permission_classes = [IsAuthenticated]
+
+    def get_serializer_class(self):
+        if self.action == 'list':
+            return HabitListSerializer
+        return HabitSerializer
+
+    def get_queryset(self):
+        qs = Habit.objects.filter(owner=self.request.user).prefetch_related('completions')
+        show_inactive = self.request.query_params.get('include_inactive', 'false').lower() == 'true'
+        if not show_inactive:
+            qs = qs.filter(is_active=True)
+        return qs
+
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
+
+    @action(detail=True, methods=['get', 'post'], url_path='completions')
+    def completions(self, request, pk=None):
+        habit = self.get_object()
+        if request.method == 'GET':
+            completions = habit.completions.all()
+            serializer = HabitCompletionSerializer(completions, many=True)
+            return Response(serializer.data)
+        
+        # POST: create a completion
+        date_str = request.data.get('completion_date', str(timezone.now().date()))
+        try:
+            import datetime
+            completion_date = datetime.date.fromisoformat(date_str)
+        except (ValueError, TypeError):
+            return Response({'detail': 'Invalid date format.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            completion, created = HabitCompletion.objects.get_or_create(
+                habit=habit,
+                completion_date=completion_date,
+            )
+            serializer = HabitCompletionSerializer(completion)
+            if created:
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.data)
+        except IntegrityError:
+            return Response({'detail': 'Already completed for this date.'}, status=status.HTTP_409_CONFLICT)
+
+    @action(detail=True, methods=['delete'], url_path='completions/(?P<completion_id>[0-9]+)')
+    def delete_completion(self, request, pk=None, completion_id=None):
+        habit = self.get_object()
+        try:
+            completion = HabitCompletion.objects.get(id=completion_id, habit=habit)
+            completion.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except HabitCompletion.DoesNotExist:
+            return Response({'detail': 'Not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+    @action(detail=True, methods=['post'], url_path='toggle-today')
+    def toggle_today(self, request, pk=None):
+        """Quick toggle for today's completion."""
+        habit = self.get_object()
+        today = timezone.now().date()
+        completion = HabitCompletion.objects.filter(habit=habit, completion_date=today).first()
+        if completion:
+            completion.delete()
+            return Response({'completed': False})
+        else:
+            HabitCompletion.objects.create(habit=habit, completion_date=today)
+            return Response({'completed': True})
