@@ -97,12 +97,17 @@ export interface StudyGoal {
 export interface SleepLog {
   id: number;
   date: string; // YYYY-MM-DD
-  bedtime: string; // HH:MM
-  wake_time: string; // HH:MM
-  total_sleep_minutes: number;
-  quality_rating: number; // 1-5
-  energy_level: number; // 1-5
+  duration_minutes?: number;
+  total_sleep_minutes?: number;
+  hours?: { hours: number; minutes: number };
+  bedtime?: string; // HH:MM
+  wake_time?: string; // HH:MM
+  quality_rating?: number; // 1-5
+  energy_level?: number; // 1-5
+  note?: string;
   notes?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface SleepStats {
@@ -128,7 +133,10 @@ export interface Habit {
   best_streak: number;
   completion_rate_30d: number;
   logs_today: boolean;
+  today_completed: boolean;
+  today_status: 'none' | 'partial' | 'done';
   logs?: HabitLog[];
+  completions?: HabitLog[];
   created_at: string;
 }
 
@@ -136,6 +144,8 @@ export interface HabitLog {
   id: number;
   habit: number;
   date: string;
+  completion_date?: string;
+  status: 'none' | 'partial' | 'done';
   completed: boolean;
   notes?: string;
 }

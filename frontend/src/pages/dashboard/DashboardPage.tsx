@@ -26,6 +26,12 @@ import {
 interface DashboardData {
   today?: string;
   study_time_today_minutes?: number;
+  study_trends_7d?: {
+    date: string;
+    day: string;
+    minutes: number;
+    hours: number;
+  }[];
   sleep_today?: {
     duration_minutes: number;
     hours?: number | { hours: number; minutes: number };
@@ -175,16 +181,24 @@ export const DashboardPage: React.FC = () => {
   const planItems = Array.isArray(data?.today_plan?.items) ? data.today_plan.items : [];
   const activeGoals = Array.isArray(data?.active_goals) ? data.active_goals : [];
 
-  // Format chart sample data
-  const chartData = [
-    { day: 'Mon', hours: 2.5 },
-    { day: 'Tue', hours: 3.0 },
-    { day: 'Wed', hours: 2.0 },
-    { day: 'Thu', hours: 3.5 },
-    { day: 'Fri', hours: 2.5 },
-    { day: 'Sat', hours: 4.0 },
-    { day: 'Sun', hours: Number((studyMins / 60).toFixed(1)) || 2.0 },
-  ];
+  // Real 7-day study trend from database
+  const chartData =
+    data?.study_trends_7d && data.study_trends_7d.length > 0
+      ? data.study_trends_7d.map((item) => ({
+          day: item.day,
+          date: item.date,
+          hours: item.hours,
+          minutes: item.minutes,
+        }))
+      : [
+          { day: 'Mon', hours: 0, minutes: 0 },
+          { day: 'Tue', hours: 0, minutes: 0 },
+          { day: 'Wed', hours: 0, minutes: 0 },
+          { day: 'Thu', hours: 0, minutes: 0 },
+          { day: 'Fri', hours: 0, minutes: 0 },
+          { day: 'Sat', hours: 0, minutes: 0 },
+          { day: 'Sun', hours: 0, minutes: 0 },
+        ];
 
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
@@ -372,14 +386,28 @@ export const DashboardPage: React.FC = () => {
                     tickFormatter={(v) => `${v}h`}
                   />
                   <Tooltip
-                    contentStyle={{
-                      backgroundColor: '#0f172a',
-                      borderRadius: '12px',
-                      border: '1px solid #334155',
-                      color: '#fff',
-                      fontSize: '12px',
+                    cursor={{ fill: 'rgba(99, 102, 241, 0.12)', radius: 8 }}
+                    content={({ active, payload }) => {
+                      if (active && payload && payload.length) {
+                        const p = payload[0].payload;
+                        const h = Math.floor((p.minutes ?? p.hours * 60) / 60);
+                        const m = Math.round((p.minutes ?? p.hours * 60) % 60);
+                        return (
+                          <div className="p-3 rounded-2xl bg-surface-900 dark:bg-surface-800 text-white shadow-xl border border-surface-700 text-xs space-y-1">
+                            <p className="font-semibold text-surface-300">
+                              {p.day} {p.date ? `(${p.date})` : ''}
+                            </p>
+                            <div className="flex items-center gap-2">
+                              <span className="text-surface-400">Study Time:</span>
+                              <span className="font-bold text-primary-400 text-sm">
+                                {h}h {m}m ({p.hours}h)
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      }
+                      return null;
                     }}
-                    formatter={(val) => [`${val} hours`, 'Study Time']}
                   />
                   <Bar
                     dataKey="hours"

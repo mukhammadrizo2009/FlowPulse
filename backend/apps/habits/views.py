@@ -46,7 +46,17 @@ class HabitViewSet(viewsets.ModelViewSet):
             completion, created = HabitCompletion.objects.get_or_create(
                 habit=habit,
                 completion_date=completion_date,
+                defaults={'status': 'done'},
             )
+            if not created:
+                # Update status if provided
+                new_status = request.data.get('status', completion.status)
+                if new_status in ('none', 'partial', 'done'):
+                    if new_status == 'none':
+                        completion.delete()
+                        return Response({'status': 'none'}, status=status.HTTP_200_OK)
+                    completion.status = new_status
+                    completion.save(update_fields=['status', 'updated_at'])
             serializer = HabitCompletionSerializer(completion)
             if created:
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -66,13 +76,65 @@ class HabitViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'], url_path='toggle-today')
     def toggle_today(self, request, pk=None):
-        """Quick toggle for today's completion."""
+        """Toggle or cycle today's habit completion."""
         habit = self.get_object()
         today = timezone.now().date()
         completion = HabitCompletion.objects.filter(habit=habit, completion_date=today).first()
-        if completion:
-            completion.delete()
-            return Response({'completed': False})
+        requested_status = request.data.get('status') if request.data else None
+        cycle_mode = request.data.get('cycle', False) if request.data else False
+
+        if requested_status:
+            if requested_status == 'none':
+                if completion:
+                    completion.delete()
+                return Response({'status': 'none', 'completed': False})
+            if completion:
+                completion.status = requested_status
+                completion.save(update_fields=['status', 'updated_at'])
+            else:
+                completion = HabitCompletion.objects.create(
+                    habit=habit, completion_date=today, status=requested_status
+                )
+            return Response({'status': requested_status, 'completed': (requested_status == 'done')})
+
+        if cycle_mode:
+            if completion is None:
+                HabitCompletion.objects.create(habit=habit, completion_date=today, status='partial')
+                return Response({'status': 'partial', 'completed': False})
+            elif completion.status == 'partial':
+                completion.status = 'done'
+                completion.save(update_fields=['status', 'updated_at'])
+                return Response({'status': 'done', 'completed': True})
+            else:
+                completion.delete()
+                return Response({'status': 'none', 'completed': False})
+
+        # Default binary toggle for quick dashboard actions
+        if completion is None:
+            HabitCompletion.objects.create(habit=habit, completion_date=today, status='done')
+            return Response({'status': 'done', 'completed': True})
         else:
-            HabitCompletion.objects.create(habit=habit, completion_date=today)
-            return Response({'completed': True})
+            completion.delete()
+            return Response({'status': 'none', 'completed': False})
+
+    @action(detail=True, methods=['post'], url_path='set-status-today')
+    def set_status_today(self, request, pk=None):
+        """Directly set today's completion status: none | partial | done."""
+        habit = self.get_object()
+        today = timezone.now().date()
+        new_status = request.data.get('status', 'done')
+        if new_status not in ('none', 'partial', 'done'):
+            return Response({'detail': 'Invalid status.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if new_status == 'none':
+            HabitCompletion.objects.filter(habit=habit, completion_date=today).delete()
+            return Response({'status': 'none', 'completed': False})
+
+        completion, _ = HabitCompletion.objects.get_or_create(
+            habit=habit,
+            completion_date=today,
+            defaults={'status': new_status},
+        )
+        completion.status = new_status
+        completion.save(update_fields=['status', 'updated_at'])
+        return Response({'status': new_status, 'completed': new_status == 'done'})

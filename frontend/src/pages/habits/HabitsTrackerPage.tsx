@@ -9,6 +9,7 @@ import {
   Flame,
   Trash2,
   Check,
+  Minus,
   Loader2,
   Trophy,
 } from 'lucide-react';
@@ -16,6 +17,8 @@ import {
 export const HabitsTrackerPage: React.FC = () => {
   const [habits, setHabits] = useState<Habit[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  // optimistic local state: habitId -> status
+  const [localStatus, setLocalStatus] = useState<Record<string, 'none' | 'partial' | 'done'>>({});
 
   // Modal
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -51,18 +54,32 @@ export const HabitsTrackerPage: React.FC = () => {
     };
   });
 
-  const handleToggleCompletion = async (habitId: number, dateStr: string) => {
-    // If today, use quick toggle
-    const isToday = dateStr === today.toISOString().split('T')[0];
-    try {
-      if (isToday) {
-        await habitsApi.toggleToday(habitId);
-      } else {
+  const handleToggleCompletion = async (habitId: number, dateStr: string, isToday: boolean) => {
+    if (!isToday) {
+      // For past days just log completion (toggle existing)
+      try {
         await habitsApi.logCompletion(habitId, dateStr);
+        fetchHabits();
+      } catch {
+        fetchHabits();
       }
+      return;
+    }
+
+    // For today: cycle none → partial → done → none optimistically
+    const key = `${habitId}_today`;
+    const current = localStatus[key] ?? habits.find((h) => h.id === habitId)?.today_status ?? 'none';
+    const next = current === 'none' ? 'partial' : current === 'partial' ? 'done' : 'none';
+
+    // Optimistic update
+    setLocalStatus((prev) => ({ ...prev, [key]: next }));
+
+    try {
+      await habitsApi.setStatusToday(habitId, next);
       fetchHabits();
     } catch {
-      fetchHabits();
+      // Revert on error
+      setLocalStatus((prev) => ({ ...prev, [key]: current }));
     }
   };
 
@@ -135,9 +152,24 @@ export const HabitsTrackerPage: React.FC = () => {
               7-Day Consistency Grid
             </h3>
           </div>
-          <span className="text-xs text-surface-400 font-medium">
-            Click any cell to toggle completion
-          </span>
+          <div className="flex items-center gap-3 text-xs text-surface-400 font-medium">
+            <span className="flex items-center gap-1">
+              <span className="inline-block w-4 h-4 rounded-md bg-surface-200 dark:bg-surface-700" />
+              None
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="inline-flex w-4 h-4 rounded-md bg-amber-400 items-center justify-center">
+                <Minus className="w-2.5 h-2.5 text-white stroke-[3]" />
+              </span>
+              Partial
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="inline-flex w-4 h-4 rounded-md bg-emerald-500 items-center justify-center">
+                <Check className="w-2.5 h-2.5 text-white stroke-[3]" />
+              </span>
+              Done
+            </span>
+          </div>
         </div>
 
         {habits.length === 0 ? (
@@ -198,18 +230,38 @@ export const HabitsTrackerPage: React.FC = () => {
                       </td>
 
                       {past7Days.map((d) => {
-                        const isCompletedToday = d.isToday && h.logs_today;
+                        const key = `${h.id}_today`;
+                        // Use local optimistic state for today, else check completions
+                        let cellStatus: 'none' | 'partial' | 'done';
+                        if (d.isToday) {
+                          cellStatus = localStatus[key] ?? h.today_status ?? 'none';
+                        } else {
+                          // Check completions array for past days
+                          const completionForDay = (h.completions ?? []).find(
+                            (c) => (c.completion_date ?? c.date) === d.dateStr
+                          );
+                          cellStatus = completionForDay?.status ?? 'none';
+                        }
+
                         return (
                           <td key={d.dateStr} className="py-4 px-2 text-center">
                             <button
-                              onClick={() => handleToggleCompletion(h.id, d.dateStr)}
-                              className={`w-7 h-7 mx-auto rounded-xl flex items-center justify-center transition-all ${
-                                isCompletedToday
-                                  ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/25 active:scale-95'
+                              onClick={() => handleToggleCompletion(h.id, d.dateStr, d.isToday)}
+                              title={
+                                cellStatus === 'none' ? 'Click to mark partial'
+                                : cellStatus === 'partial' ? 'Click to mark done'
+                                : 'Click to clear'
+                              }
+                              className={`w-7 h-7 mx-auto rounded-xl flex items-center justify-center transition-all duration-200 ${
+                                cellStatus === 'done'
+                                  ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/25 scale-105'
+                                  : cellStatus === 'partial'
+                                  ? 'bg-amber-400 text-white shadow-md shadow-amber-400/25'
                                   : 'bg-surface-200/60 dark:bg-surface-800/80 hover:bg-surface-300 dark:hover:bg-surface-700 text-surface-400'
                               }`}
                             >
-                              {isCompletedToday && <Check className="w-4 h-4 stroke-[3]" />}
+                              {cellStatus === 'done' && <Check className="w-4 h-4 stroke-[3]" />}
+                              {cellStatus === 'partial' && <Minus className="w-3.5 h-3.5 stroke-[3]" />}
                             </button>
                           </td>
                         );

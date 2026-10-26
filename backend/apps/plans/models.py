@@ -5,10 +5,12 @@ import datetime
 
 class Plan(models.Model):
     PERIOD_DAILY = 'daily'
+    PERIOD_WEEKLY = 'weekly'
     PERIOD_MONTHLY = 'monthly'
     PERIOD_YEARLY = 'yearly'
     PERIOD_CHOICES = [
         (PERIOD_DAILY, 'Daily'),
+        (PERIOD_WEEKLY, 'Weekly'),
         (PERIOD_MONTHLY, 'Monthly'),
         (PERIOD_YEARLY, 'Yearly'),
     ]
@@ -21,7 +23,7 @@ class Plan(models.Model):
     )
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True)
-    period_type = models.CharField(max_length=10, choices=PERIOD_CHOICES, db_index=True)
+    period_type = models.CharField(max_length=10, choices=PERIOD_CHOICES, db_index=True)  # noqa: max_length covers 'weekly'
     start_date = models.DateField()
     end_date = models.DateField()
     created_at = models.DateTimeField(auto_now_add=True)
@@ -92,6 +94,23 @@ class Plan(models.Model):
             start_date=start,
             defaults={
                 'title': f"Yearly Plan — {year}",
+                'end_date': end,
+            }
+        )
+        return plan
+
+    @classmethod
+    def get_or_create_weekly(cls, owner, date):
+        """Get or create a weekly plan for the ISO week containing `date`."""
+        # Find Monday (start) and Sunday (end) of the week
+        start = date - datetime.timedelta(days=date.weekday())  # Monday
+        end = start + datetime.timedelta(days=6)                # Sunday
+        plan, _ = cls.objects.get_or_create(
+            owner=owner,
+            period_type=cls.PERIOD_WEEKLY,
+            start_date=start,
+            defaults={
+                'title': f"Weekly Plan — {start.strftime('%b %d')} – {end.strftime('%b %d, %Y')}",
                 'end_date': end,
             }
         )

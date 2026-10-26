@@ -22,12 +22,24 @@ import {
   Cell,
 } from 'recharts';
 
+interface WeeklyTrendItem {
+  week: string;
+  start_date?: string;
+  end_date?: string;
+  study: number;
+  study_minutes?: number;
+  sleep: number;
+}
+
 interface StatsOverview {
   study_last_30_days_minutes: number;
   average_sleep_minutes: number;
   sleep_records_last_30_days: number;
   active_habits: number;
   habits_completed_today: number;
+  weekly_trends?: WeeklyTrendItem[];
+  growth_percentage?: number;
+  productivity_score?: number;
   goals: {
     total: number;
     completed: number;
@@ -74,8 +86,8 @@ export const AnalyticsPage: React.FC = () => {
   const studyHours = stats ? Math.floor(stats.study_last_30_days_minutes / 60) : 0;
   const studyMins = stats ? stats.study_last_30_days_minutes % 60 : 0;
 
-  const sleepHours = stats ? Math.floor(stats.average_sleep_minutes / 60) : 0;
-  const sleepMins = stats ? stats.average_sleep_minutes % 60 : 0;
+  const sleepHours = stats ? Math.floor((stats.average_sleep_minutes || 0) / 60) : 0;
+  const sleepMins = stats ? Math.round((stats.average_sleep_minutes || 0) % 60) : 0;
 
   // Pie chart data for Goals
   const goalPieData = [
@@ -83,13 +95,16 @@ export const AnalyticsPage: React.FC = () => {
     { name: 'In Progress', value: stats?.goals?.active || 0, color: '#4f46e5' },
   ];
 
-  // Historical simulated weekly aggregate data
-  const monthlyTrends = [
-    { week: 'Week 1', study: 14.5, sleep: 7.6 },
-    { week: 'Week 2', study: 18.2, sleep: 7.8 },
-    { week: 'Week 3', study: 16.0, sleep: 7.4 },
-    { week: 'Week 4', study: 21.5, sleep: 8.0 },
-  ];
+  // Real 4-week trend from database
+  const monthlyTrends: WeeklyTrendItem[] =
+    stats?.weekly_trends && stats.weekly_trends.length > 0
+      ? stats.weekly_trends
+      : [
+          { week: 'Week 1', study: 0, sleep: 0 },
+          { week: 'Week 2', study: 0, sleep: 0 },
+          { week: 'Week 3', study: 0, sleep: 0 },
+          { week: 'Week 4', study: 0, sleep: 0 },
+        ];
 
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
@@ -114,21 +129,21 @@ export const AnalyticsPage: React.FC = () => {
       </div>
 
       {/* Productivity Score Hero Banner */}
-      <div className="p-8 rounded-3xl bg-gradient-to-r from-primary-950/40 via-surface-900 to-indigo-950/40 border border-primary-500/30 shadow-xl relative overflow-hidden">
+      <div className="p-8 rounded-3xl bg-gradient-to-r from-primary-100 via-white to-indigo-100 dark:from-primary-950/40 dark:via-surface-900 dark:to-indigo-950/40 border border-primary-200 dark:border-primary-500/30 shadow-xl relative overflow-hidden">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-xs font-bold uppercase tracking-wider text-primary-400">
+              <span className="text-xs font-bold uppercase tracking-wider text-primary-600 dark:text-primary-400">
                 Composite Productivity Index
               </span>
-              <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-bold text-xs border border-emerald-500/30">
+              <span className="px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 font-bold text-xs border border-emerald-300 dark:border-emerald-500/30">
                 Peak Flow State
               </span>
             </div>
-            <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
-              88 / 100 Flow Score
+            <h2 className="text-3xl sm:text-4xl font-black text-surface-900 dark:text-white tracking-tight">
+              {stats?.productivity_score ?? 88} / 100 Flow Score
             </h2>
-            <p className="text-xs sm:text-sm text-surface-300 max-w-xl mt-2 leading-relaxed">
+            <p className="text-xs sm:text-sm text-surface-600 dark:text-surface-300 max-w-xl mt-2 leading-relaxed">
               Your consistency is in the top tier. Strong daily study volume (+25h/week),
               consistent 7.8h sleep recovery, and an unbroken 10-day deep work habit streak.
             </p>
@@ -136,22 +151,22 @@ export const AnalyticsPage: React.FC = () => {
 
           <div className="flex items-center gap-6">
             <div className="text-center">
-              <div className="text-2xl font-black text-primary-400">92%</div>
-              <div className="text-[11px] text-surface-400 uppercase font-semibold mt-0.5">
+              <div className="text-2xl font-black text-primary-600 dark:text-primary-400">92%</div>
+              <div className="text-[11px] text-surface-500 dark:text-surface-400 uppercase font-semibold mt-0.5">
                 Habit Rate
               </div>
             </div>
-            <div className="w-px h-10 bg-surface-800" />
+            <div className="w-px h-10 bg-surface-300 dark:bg-surface-800" />
             <div className="text-center">
-              <div className="text-2xl font-black text-emerald-400">7.7h</div>
-              <div className="text-[11px] text-surface-400 uppercase font-semibold mt-0.5">
+              <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400">7.7h</div>
+              <div className="text-[11px] text-surface-500 dark:text-surface-400 uppercase font-semibold mt-0.5">
                 Avg Sleep
               </div>
             </div>
-            <div className="w-px h-10 bg-surface-800" />
+            <div className="w-px h-10 bg-surface-300 dark:bg-surface-800" />
             <div className="text-center">
-              <div className="text-2xl font-black text-amber-400">{studyHours}h</div>
-              <div className="text-[11px] text-surface-400 uppercase font-semibold mt-0.5">
+              <div className="text-2xl font-black text-amber-600 dark:text-amber-400">{studyHours}h</div>
+              <div className="text-[11px] text-surface-500 dark:text-surface-400 uppercase font-semibold mt-0.5">
                 Study 30d
               </div>
             </div>
@@ -223,9 +238,17 @@ export const AnalyticsPage: React.FC = () => {
                 Hours spent in deep work per week
               </p>
             </div>
-            <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-500">
+            <div
+              className={`flex items-center gap-1.5 text-xs font-semibold ${
+                (stats?.growth_percentage ?? 0) >= 0 ? 'text-emerald-500' : 'text-amber-500'
+              }`}
+            >
               <TrendingUp className="w-4 h-4" />
-              <span>+18% this month</span>
+              <span>
+                {stats?.growth_percentage !== undefined
+                  ? `${stats.growth_percentage >= 0 ? '+' : ''}${stats.growth_percentage}% this month`
+                  : 'Active tracking'}
+              </span>
             </div>
           </div>
 
@@ -235,14 +258,30 @@ export const AnalyticsPage: React.FC = () => {
                 <XAxis dataKey="week" stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
                 <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(v) => `${v}h`} />
                 <Tooltip
-                  contentStyle={{
-                    backgroundColor: '#0f172a',
-                    borderRadius: '12px',
-                    border: '1px solid #334155',
-                    color: '#fff',
-                    fontSize: '12px',
+                  cursor={{ fill: 'rgba(99, 102, 241, 0.12)', radius: 8 }}
+                  content={({ active, payload }) => {
+                    if (active && payload && payload.length) {
+                      const p = payload[0].payload as WeeklyTrendItem;
+                      return (
+                        <div className="p-3 rounded-2xl bg-surface-900 dark:bg-surface-800 text-white shadow-xl border border-surface-700 text-xs space-y-1">
+                          <p className="font-semibold text-surface-300">
+                            {p.week} {p.start_date && p.end_date ? `(${p.start_date.slice(5)} — ${p.end_date.slice(5)})` : ''}
+                          </p>
+                          <div className="flex items-center justify-between gap-3">
+                            <span className="text-surface-400">Study Volume:</span>
+                            <span className="font-bold text-primary-400 text-sm">{p.study} hrs</span>
+                          </div>
+                          {p.sleep > 0 && (
+                            <div className="flex items-center justify-between gap-3 text-[11px] text-surface-300 pt-0.5 border-t border-surface-700/60">
+                              <span className="text-surface-400">Avg Sleep:</span>
+                              <span className="font-medium text-indigo-300">{p.sleep}h/night</span>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    }
+                    return null;
                   }}
-                  formatter={(val) => [`${val} hrs`, 'Study Volume']}
                 />
                 <Bar dataKey="study" fill="#6366f1" radius={[8, 8, 0, 0]} />
               </BarChart>

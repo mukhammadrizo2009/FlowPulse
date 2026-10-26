@@ -14,6 +14,16 @@ class StudyRecordSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
 
+    def to_internal_value(self, data):
+        data = data.copy() if hasattr(data, 'copy') else dict(data)
+        if 'study_date' in data and 'date' not in data:
+            data['date'] = data.get('study_date')
+        if 'subject' in data and 'description' not in data:
+            data['description'] = data.get('subject')
+        if 'notes' in data and 'description' not in data:
+            data['description'] = data.get('notes')
+        return super().to_internal_value(data)
+
     def get_goal_title(self, obj):
         return obj.goal.title if obj.goal else None
 

@@ -72,6 +72,15 @@ class Habit(models.Model):
 
 
 class HabitCompletion(models.Model):
+    STATUS_NONE = 'none'
+    STATUS_PARTIAL = 'partial'
+    STATUS_DONE = 'done'
+    STATUS_CHOICES = [
+        (STATUS_NONE, 'Not Done'),
+        (STATUS_PARTIAL, 'Partial'),
+        (STATUS_DONE, 'Done'),
+    ]
+
     habit = models.ForeignKey(
         Habit,
         on_delete=models.CASCADE,
@@ -79,7 +88,14 @@ class HabitCompletion(models.Model):
         db_index=True,
     )
     completion_date = models.DateField(db_index=True)
+    status = models.CharField(
+        max_length=10,
+        choices=STATUS_CHOICES,
+        default=STATUS_DONE,
+        db_index=True,
+    )
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         db_table = 'habits_completion'
@@ -90,4 +106,4 @@ class HabitCompletion(models.Model):
         ]
 
     def __str__(self):
-        return f"{self.habit.name} - {self.completion_date}"
+        return f"{self.habit.name} - {self.completion_date} ({self.status})"

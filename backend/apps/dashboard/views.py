@@ -3,6 +3,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from django.utils import timezone
 from django.db.models import Sum
+import datetime
 
 from ..study.models import StudyRecord
 from ..sleep.models import SleepRecord
@@ -22,6 +23,27 @@ def dashboard(request):
     today_study = StudyRecord.objects.filter(
         owner=user, date=today
     ).aggregate(total=Sum('duration_minutes'))['total'] or 0
+
+    # Study trends for the last 7 days (including today)
+    seven_days_ago = today - datetime.timedelta(days=6)
+    recent_records = StudyRecord.objects.filter(
+        owner=user,
+        date__gte=seven_days_ago,
+        date__lte=today,
+    ).values('date').annotate(total_minutes=Sum('duration_minutes'))
+
+    study_map = {r['date']: r['total_minutes'] for r in recent_records}
+    study_trends_7d = []
+    curr = seven_days_ago
+    while curr <= today:
+        day_minutes = study_map.get(curr, 0)
+        study_trends_7d.append({
+            'date': str(curr),
+            'day': curr.strftime('%a'),
+            'minutes': day_minutes,
+            'hours': round(day_minutes / 60, 1),
+        })
+        curr += datetime.timedelta(days=1)
 
     # Today's sleep
     today_sleep = None
@@ -122,6 +144,7 @@ def dashboard(request):
     return Response({
         'today': str(today),
         'study_time_today_minutes': today_study,
+        'study_trends_7d': study_trends_7d,
         'sleep_today': today_sleep,
         'habits': habits_data,
         'today_plan': today_plan_data,

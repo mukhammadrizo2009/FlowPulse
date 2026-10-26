@@ -124,13 +124,21 @@ export const studyApi = {
   },
 
   createRecord: async (record: {
-    subject?: string;
+    date?: string;
+    study_date?: string;
     duration_minutes: number;
-    study_date: string;
+    description?: string;
+    subject?: string;
     notes?: string;
     goal?: number | null;
   }) => {
-    const { data } = await apiClient.post<StudySession>('/study-records/', record);
+    const payload = {
+      date: record.date || record.study_date,
+      duration_minutes: record.duration_minutes,
+      description: record.description || record.subject || record.notes || '',
+      goal: record.goal,
+    };
+    const { data } = await apiClient.post<StudySession>('/study-records/', payload);
     return data;
   },
 
@@ -152,18 +160,54 @@ export const sleepApi = {
   },
 
   logSleep: async (log: {
-    sleep_date: string;
-    bedtime: string;
-    wake_time: string;
+    date?: string;
+    sleep_date?: string;
+    duration_minutes?: number;
+    hours_input?: number;
+    minutes_input?: number;
+    bedtime?: string;
+    wake_time?: string;
     sleep_quality?: number;
+    note?: string;
     notes?: string;
   }) => {
-    const { data } = await apiClient.post<SleepLog>('/sleep-records/', log);
+    const payload = {
+      date: log.date || log.sleep_date,
+      duration_minutes: log.duration_minutes,
+      hours_input: log.hours_input,
+      minutes_input: log.minutes_input,
+      note: log.note || log.notes || '',
+      bedtime: log.bedtime,
+      wake_time: log.wake_time,
+    };
+    const { data } = await apiClient.post<SleepLog>('/sleep-records/', payload);
     return data;
   },
 
   deleteLog: async (id: number) => {
     await apiClient.delete(`/sleep-records/${id}/`);
+  },
+
+  updateLog: async (
+    id: number,
+    log: {
+      date?: string;
+      duration_minutes?: number;
+      hours_input?: number;
+      minutes_input?: number;
+      note?: string;
+      notes?: string;
+    }
+  ) => {
+    const payload = {
+      date: log.date,
+      duration_minutes: log.duration_minutes,
+      hours_input: log.hours_input,
+      minutes_input: log.minutes_input,
+      note: log.note ?? log.notes,
+    };
+    const { data } = await apiClient.patch<SleepLog>(`/sleep-records/${id}/`, payload);
+    return data;
   },
 
   getStats: async () => {
@@ -194,7 +238,12 @@ export const habitsApi = {
   },
 
   toggleToday: async (id: number) => {
-    const { data } = await apiClient.post<{ completed: boolean }>(`/habits/${id}/toggle-today/`);
+    const { data } = await apiClient.post<{ status: string; completed: boolean }>(`/habits/${id}/toggle-today/`);
+    return data;
+  },
+
+  setStatusToday: async (id: number, status: 'none' | 'partial' | 'done') => {
+    const { data } = await apiClient.post<{ status: string; completed: boolean }>(`/habits/${id}/set-status-today/`, { status });
     return data;
   },
 

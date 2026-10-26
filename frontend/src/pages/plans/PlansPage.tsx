@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 
 export const PlansPage: React.FC = () => {
-  const [periodType, setPeriodType] = useState<'daily' | 'monthly' | 'yearly'>('daily');
+  const [periodType, setPeriodType] = useState<'daily' | 'weekly' | 'monthly' | 'yearly'>('daily');
   const [currentDate, setCurrentDate] = useState(() => new Date());
   const [plan, setPlan] = useState<DailyPlan | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -147,14 +147,38 @@ export const PlansPage: React.FC = () => {
 
   const handlePrevDay = () => {
     const prev = new Date(currentDate);
-    prev.setDate(prev.getDate() - 1);
+    if (periodType === 'weekly') {
+      prev.setDate(prev.getDate() - 7);
+    } else {
+      prev.setDate(prev.getDate() - 1);
+    }
     setCurrentDate(prev);
   };
 
   const handleNextDay = () => {
     const next = new Date(currentDate);
-    next.setDate(next.getDate() + 1);
+    if (periodType === 'weekly') {
+      next.setDate(next.getDate() + 7);
+    } else {
+      next.setDate(next.getDate() + 1);
+    }
     setCurrentDate(next);
+  };
+
+  // Helper: get Monday of the current week
+  const getWeekStart = (date: Date) => {
+    const d = new Date(date);
+    const day = d.getDay();
+    const diff = day === 0 ? -6 : 1 - day; // Monday
+    d.setDate(d.getDate() + diff);
+    return d;
+  };
+
+  const getWeekEnd = (date: Date) => {
+    const start = getWeekStart(date);
+    const end = new Date(start);
+    end.setDate(start.getDate() + 6);
+    return end;
   };
 
   const handleToday = () => {
@@ -196,6 +220,16 @@ export const PlansPage: React.FC = () => {
             Daily Plan
           </button>
           <button
+            onClick={() => setPeriodType('weekly')}
+            className={`px-3 py-1.5 rounded-lg transition-all ${
+              periodType === 'weekly'
+                ? 'bg-surface-50 dark:bg-surface-900 text-surface-900 dark:text-white shadow-sm'
+                : 'text-surface-500 hover:text-surface-900 dark:hover:text-white'
+            }`}
+          >
+            Weekly Goals
+          </button>
+          <button
             onClick={() => setPeriodType('monthly')}
             className={`px-3 py-1.5 rounded-lg transition-all ${
               periodType === 'monthly'
@@ -218,8 +252,8 @@ export const PlansPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Date Navigation Bar (for Daily mode) */}
-      {periodType === 'daily' && (
+      {/* Date Navigation Bar (for Daily & Weekly mode) */}
+      {(periodType === 'daily' || periodType === 'weekly') && (
         <div className="flex items-center justify-between p-4 rounded-2xl bg-surface-50 dark:bg-surface-900 border border-surface-200 dark:border-surface-800 shadow-sm">
           <div className="flex items-center gap-2">
             <button
@@ -245,12 +279,14 @@ export const PlansPage: React.FC = () => {
           <div className="flex items-center gap-2">
             <Calendar className="w-4 h-4 text-primary-500" />
             <span className="font-bold text-sm text-surface-900 dark:text-white">
-              {currentDate.toLocaleDateString('en-US', {
-                weekday: 'short',
-                month: 'short',
-                day: 'numeric',
-                year: 'numeric',
-              })}
+              {periodType === 'weekly'
+                ? `${getWeekStart(currentDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} – ${getWeekEnd(currentDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
+                : currentDate.toLocaleDateString('en-US', {
+                    weekday: 'short',
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric',
+                  })}
             </span>
           </div>
 
@@ -273,6 +309,8 @@ export const PlansPage: React.FC = () => {
                 {plan?.notes ||
                   (periodType === 'daily'
                     ? "Today's Agenda & Action Items"
+                    : periodType === 'weekly'
+                    ? 'Weekly Goals & Priorities'
                     : periodType === 'monthly'
                     ? 'Month Focus & Milestones'
                     : 'Annual Vision & Objectives')}
@@ -339,6 +377,8 @@ export const PlansPage: React.FC = () => {
                 placeholder={
                   periodType === 'daily'
                     ? 'Add task for today (e.g. Finish Chapter 4)...'
+                    : periodType === 'weekly'
+                    ? 'Add weekly goal (e.g. Complete sprint tasks)...'
                     : 'Add objective or milestone...'
                 }
                 value={newItemTitle}
@@ -354,16 +394,16 @@ export const PlansPage: React.FC = () => {
       </div>
 
       {/* Strategy Tip Box */}
-      <div className="p-6 rounded-3xl bg-gradient-to-r from-primary-950/20 via-surface-900 to-indigo-950/20 border border-primary-500/20 shadow-sm flex items-start gap-4">
-        <div className="w-10 h-10 rounded-2xl bg-primary-600/20 text-primary-400 flex items-center justify-center shrink-0">
+      <div className="p-6 rounded-3xl bg-surface-50 dark:bg-surface-900 border border-surface-200 dark:border-surface-800 shadow-sm flex items-start gap-4">
+        <div className="w-10 h-10 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
           <Repeat className="w-5 h-5" />
         </div>
         <div>
           <h4 className="font-bold text-sm text-surface-900 dark:text-white">
             Daily Execution Tip: The Rule of 3
           </h4>
-          <p className="text-xs text-surface-400 mt-1 leading-relaxed">
-            Every morning, identify the **3 most consequential tasks** that would make today a win,
+          <p className="text-xs text-surface-600 dark:text-surface-300 mt-1 leading-relaxed">
+            Every morning, identify the <strong className="font-semibold text-surface-900 dark:text-white">3 most consequential tasks</strong> that would make today a win,
             regardless of what else happens. Complete those first before checking email or messages.
           </p>
         </div>

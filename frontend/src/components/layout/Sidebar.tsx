@@ -95,14 +95,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         </div>
 
         {/* Bottom Consistency Widget */}
-        <div className="p-4 m-3 rounded-2xl bg-gradient-to-br from-primary-950/40 via-surface-900/60 to-indigo-950/40 border border-primary-500/20 shadow-inner">
-          <div className="flex items-center gap-2 text-primary-400 mb-1">
-            <Flame className="w-4 h-4 text-amber-400 animate-pulse" />
-            <span className="text-xs font-bold uppercase tracking-wider text-amber-300">
+        <div className="p-4 m-3 rounded-2xl bg-surface-100 dark:bg-surface-900/90 border border-surface-200 dark:border-surface-800/80 shadow-sm">
+          <div className="flex items-center gap-2 mb-1">
+            <Flame className="w-4 h-4 text-amber-500 animate-pulse" />
+            <span className="text-xs font-bold uppercase tracking-wider text-amber-500 dark:text-amber-400">
               Flow Streak
             </span>
           </div>
-          <p className="text-xs text-surface-300 leading-relaxed mt-1">
+          <p className="text-xs text-surface-600 dark:text-surface-400 leading-relaxed mt-1">
             Consistency compound over time. Stay focused today!
           </p>
         </div>

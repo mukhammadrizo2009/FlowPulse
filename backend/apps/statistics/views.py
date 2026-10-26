@@ -274,15 +274,59 @@ def statistics_overview(request):
     ).count()
     
     # Goals summary
-    # pyrefly: ignore[missing-attribute]
     goals = Goal.objects.filter(owner=request.user)
-    
+
+    # 4-Week Study and Sleep trends directly from database
+    weekly_trends = []
+    for i in range(4):
+        start_d = today - datetime.timedelta(days=27 - (i * 7))
+        end_d = start_d + datetime.timedelta(days=6)
+        
+        w_study_mins = StudyRecord.objects.filter(
+            owner=request.user,
+            date__gte=start_d,
+            date__lte=end_d,
+        ).aggregate(total=Sum('duration_minutes'))['total'] or 0
+
+        w_sleep_avg = SleepRecord.objects.filter(
+            owner=request.user,
+            date__gte=start_d,
+            date__lte=end_d,
+        ).aggregate(avg=Avg('duration_minutes'))['avg']
+        
+        weekly_trends.append({
+            'week': f'Week {i + 1}',
+            'start_date': str(start_d),
+            'end_date': str(end_d),
+            'study': round(w_study_mins / 60, 1),
+            'study_minutes': w_study_mins,
+            'sleep': round((w_sleep_avg or 0) / 60, 1),
+        })
+
+    # Growth comparison: second half of the month vs first half
+    w_first_half = weekly_trends[0]['study_minutes'] + weekly_trends[1]['study_minutes']
+    w_second_half = weekly_trends[2]['study_minutes'] + weekly_trends[3]['study_minutes']
+    if w_first_half > 0:
+        growth_percentage = round(((w_second_half - w_first_half) / w_first_half) * 100)
+    else:
+        growth_percentage = 0 if w_second_half == 0 else 100
+
+    # Flow Productivity Score (0-100)
+    study_score = min(35, round((study_30d / (30 * 120)) * 35))
+    habit_score = min(30, round((completed_today / max(1, active_habits_count)) * 30))
+    sleep_score = min(20, round(((avg_sleep or 420) / 480) * 20))
+    goal_score = min(15, goals.filter(status='completed').count() * 5)
+    productivity_score = min(100, max(25, study_score + habit_score + sleep_score + goal_score))
+
     return Response({
         'study_last_30_days_minutes': study_30d,
         'average_sleep_minutes': round(avg_sleep, 1) if avg_sleep else None,
         'sleep_records_last_30_days': sleep_count,
         'active_habits': active_habits_count,
         'habits_completed_today': completed_today,
+        'weekly_trends': weekly_trends,
+        'growth_percentage': growth_percentage,
+        'productivity_score': productivity_score,
         'goals': {
             'total': goals.count(),
             'active': goals.filter(status='active').count(),
