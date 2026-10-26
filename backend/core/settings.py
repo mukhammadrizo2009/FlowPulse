@@ -11,7 +11,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Security
 SECRET_KEY = config('SECRET_KEY', default='django-insecure-change-me-in-production')
-DEBUG = config('DEBUG', default=True, cast=bool)
+IS_RENDER = os.environ.get('RENDER') == 'true' or bool(os.environ.get('RENDER_EXTERNAL_HOSTNAME'))
+DEBUG = config('DEBUG', default=not IS_RENDER, cast=bool)
 ALLOWED_HOSTS = list(config('ALLOWED_HOSTS', default='localhost,127.0.0.1,0.0.0.0,.onrender.com', cast=Csv()))
 # Add Render external hostname automatically if present
 RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
