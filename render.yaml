@@ -8,7 +8,7 @@ services:
     branch: main
     rootDir: backend
     buildCommand: "chmod +x build.sh && ./build.sh"
-    startCommand: "gunicorn core.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --threads 4 --timeout 120"
+    startCommand: "python manage.py migrate --noinput && gunicorn core.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --threads 4 --timeout 120"
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.9
