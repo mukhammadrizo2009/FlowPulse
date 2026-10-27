@@ -49,6 +49,8 @@ yarn-error.log*
 dist/
 dist-ssr/
 *.local
+!backend/frontend_dist/
+!backend/frontend_dist/**
 
 # IDEs & OS
 .vscode/
