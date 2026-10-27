@@ -15,6 +15,64 @@ export interface User {
   goal_deadline_reminder_days: number;
   date_joined?: string;
   last_login?: string | null;
+  is_staff?: boolean;
+  is_superuser?: boolean;
+}
+
+export interface PlatformStats {
+  user_stats: {
+    total_users: number;
+    active_today: number;
+    active_7d: number;
+    active_30d: number;
+    new_today: number;
+    new_7d: number;
+    new_30d: number;
+  };
+  engagement: {
+    habits: {
+      total_habits: number;
+      active_habits: number;
+      completions_today: number;
+      completions_total: number;
+    };
+    study: {
+      total_hours: number;
+      total_sessions: number;
+      today_hours: number;
+    };
+    sleep: {
+      total_logs: number;
+      avg_hours: number;
+    };
+    goals_and_plans: {
+      total_goals: number;
+      completed_goals: number;
+      total_plans: number;
+      total_plan_tasks: number;
+      completed_plan_tasks: number;
+    };
+  };
+  daily_trends: Array<{
+    date: string;
+    formatted_date: string;
+    study_hours: number;
+    habit_completions: number;
+    sleep_logs: number;
+    new_users: number;
+  }>;
+  recent_users: Array<{
+    id: number;
+    email: string;
+    display_name: string;
+    date_joined: string;
+    last_login: string | null;
+    is_active: boolean;
+    is_staff: boolean;
+    habits_count: number;
+    study_hours: number;
+  }>;
+  generated_at: string;
 }
 
 export interface AuthResponse {

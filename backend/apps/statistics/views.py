@@ -10,6 +10,8 @@ from ..study.models import StudyRecord
 from ..sleep.models import SleepRecord
 from ..habits.models import Habit, HabitCompletion
 from ..goals.models import Goal
+from ..plans.models import Plan, PlanItem
+from ..users.models import CustomUser
 
 
 def parse_date(date_str, default):
@@ -333,3 +335,140 @@ def statistics_overview(request):
             'completed': goals.filter(status='completed').count(),
         }
     })
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def platform_admin_stats(request):
+    """
+    Platform-wide analytics for administrator users.
+    Returns metrics on user count, active users, growth trends, engagement,
+    and a breakdown of all platform modules.
+    """
+    user = request.user
+    if not (user.is_staff or user.is_superuser or user.email == 'meliqulovich@gmail.com'):
+        return Response({
+            'error': 'Forbidden',
+            'detail': 'Faqat platforma administratorlari uchun ruxsat etilgan.'
+        }, status=403)
+
+    now = timezone.now()
+    today = now.date()
+
+    # --- 1. USER METRICS ---
+    total_users = CustomUser.objects.count()
+    active_24h = CustomUser.objects.filter(last_login__gte=now - datetime.timedelta(hours=24)).count()
+    active_7d = CustomUser.objects.filter(last_login__gte=now - datetime.timedelta(days=7)).count()
+    active_30d = CustomUser.objects.filter(last_login__gte=now - datetime.timedelta(days=30)).count()
+
+    # Active users today by actions (users who made any record today)
+    users_with_study_today = set(StudyRecord.objects.filter(date=today).values_list('owner_id', flat=True))
+    users_with_habit_today = set(HabitCompletion.objects.filter(completion_date=today).values_list('habit__owner_id', flat=True))
+    users_with_sleep_today = set(SleepRecord.objects.filter(date=today).values_list('owner_id', flat=True))
+    today_active_set = users_with_study_today | users_with_habit_today | users_with_sleep_today
+    if user.id:
+        today_active_set.add(user.id)
+    active_users_today_count = max(active_24h, len(today_active_set))
+
+    new_users_today = CustomUser.objects.filter(date_joined__date=today).count()
+    new_users_7d = CustomUser.objects.filter(date_joined__gte=now - datetime.timedelta(days=7)).count()
+    new_users_30d = CustomUser.objects.filter(date_joined__gte=now - datetime.timedelta(days=30)).count()
+
+    # --- 2. ENGAGEMENT METRICS ---
+    # Habits
+    total_habits = Habit.objects.count()
+    active_habits = Habit.objects.filter(is_active=True).count()
+    habit_completions_today = HabitCompletion.objects.filter(completion_date=today, status='completed').count()
+    habit_completions_total = HabitCompletion.objects.filter(status='completed').count()
+
+    # Study
+    total_study_minutes = StudyRecord.objects.aggregate(total=Sum('duration_minutes'))['total'] or 0
+    study_sessions_count = StudyRecord.objects.count()
+    study_today_minutes = StudyRecord.objects.filter(date=today).aggregate(total=Sum('duration_minutes'))['total'] or 0
+
+    # Sleep
+    total_sleep_logs = SleepRecord.objects.count()
+    avg_sleep_dur = SleepRecord.objects.aggregate(avg=Avg('duration_minutes'))['avg'] or 0
+
+    # Goals & Plans
+    total_goals = Goal.objects.count()
+    completed_goals = Goal.objects.filter(status='completed').count()
+    total_plans = Plan.objects.count()
+    total_plan_tasks = PlanItem.objects.count()
+    completed_plan_tasks = PlanItem.objects.filter(is_completed=True).count()
+
+    # --- 3. 14-DAY DAILY ACTIVITY & USER GROWTH TRENDS ---
+    daily_trends = []
+    for i in range(13, -1, -1):
+        d = today - datetime.timedelta(days=i)
+        d_study = StudyRecord.objects.filter(date=d).aggregate(total=Sum('duration_minutes'))['total'] or 0
+        d_completions = HabitCompletion.objects.filter(completion_date=d, status='completed').count()
+        d_sleep = SleepRecord.objects.filter(date=d).count()
+        d_new_users = CustomUser.objects.filter(date_joined__date=d).count()
+
+        daily_trends.append({
+            'date': d.isoformat(),
+            'formatted_date': d.strftime('%d-%b'),
+            'study_hours': round(d_study / 60, 1),
+            'habit_completions': d_completions,
+            'sleep_logs': d_sleep,
+            'new_users': d_new_users,
+        })
+
+    # --- 4. RECENT USERS LIST ---
+    recent_users_qs = CustomUser.objects.all().order_by('-date_joined')[:20]
+    recent_users = []
+    for u in recent_users_qs:
+        u_habits = Habit.objects.filter(owner=u).count()
+        u_study_mins = StudyRecord.objects.filter(owner=u).aggregate(total=Sum('duration_minutes'))['total'] or 0
+        recent_users.append({
+            'id': u.id,
+            'email': u.email,
+            'display_name': u.display_name or u.email.split('@')[0],
+            'date_joined': u.date_joined.isoformat(),
+            'last_login': u.last_login.isoformat() if u.last_login else None,
+            'is_active': u.is_active,
+            'is_staff': u.is_staff,
+            'habits_count': u_habits,
+            'study_hours': round(u_study_mins / 60, 1),
+        })
+
+    return Response({
+        'user_stats': {
+            'total_users': total_users,
+            'active_today': active_users_today_count,
+            'active_7d': max(active_7d, active_users_today_count),
+            'active_30d': max(active_30d, active_users_today_count),
+            'new_today': new_users_today,
+            'new_7d': new_users_7d,
+            'new_30d': new_users_30d,
+        },
+        'engagement': {
+            'habits': {
+                'total_habits': total_habits,
+                'active_habits': active_habits,
+                'completions_today': habit_completions_today,
+                'completions_total': habit_completions_total,
+            },
+            'study': {
+                'total_hours': round(total_study_minutes / 60, 1),
+                'total_sessions': study_sessions_count,
+                'today_hours': round(study_today_minutes / 60, 1),
+            },
+            'sleep': {
+                'total_logs': total_sleep_logs,
+                'avg_hours': round(avg_sleep_dur / 60, 1),
+            },
+            'goals_and_plans': {
+                'total_goals': total_goals,
+                'completed_goals': completed_goals,
+                'total_plans': total_plans,
+                'total_plan_tasks': total_plan_tasks,
+                'completed_plan_tasks': completed_plan_tasks,
+            }
+        },
+        'daily_trends': daily_trends,
+        'recent_users': recent_users,
+        'generated_at': now.isoformat(),
+    })
+

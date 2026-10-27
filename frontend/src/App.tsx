@@ -14,6 +14,7 @@ import { PlansPage } from './pages/plans/PlansPage';
 import { NotesPage } from './pages/notes/NotesPage';
 import { AnalyticsPage } from './pages/analytics/AnalyticsPage';
 import { SettingsPage } from './pages/settings/SettingsPage';
+import { PlatformAnalyticsPage } from './pages/admin/PlatformAnalyticsPage';
 import { ErrorBoundary } from './components/ui/ErrorBoundary';
 import { Loader2 } from 'lucide-react';
 
@@ -94,6 +95,8 @@ export function App() {
             <Route path="/notes" element={<NotesPage />} />
             <Route path="/analytics" element={<AnalyticsPage />} />
             <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/platform-analytics" element={<PlatformAnalyticsPage />} />
+            <Route path="/admin-stats" element={<PlatformAnalyticsPage />} />
           </Route>
 
           {/* Fallback */}

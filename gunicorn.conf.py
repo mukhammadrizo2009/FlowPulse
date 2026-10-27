@@ -24,8 +24,17 @@ def on_starting(server):
         print("===> [FlowPulse DevOps] Gunicorn on_starting: Running migrations...")
         call_command('migrate', interactive=False)
         from django.contrib.sites.models import Site
-        site_domain = os.environ.get('RENDER_EXTERNAL_HOSTNAME', 'flowpulse.onrender.com')
         Site.objects.update_or_create(id=1, defaults={'domain': site_domain, 'name': 'FlowPulse'})
+        # Ensure meliqulovich@gmail.com has staff & superuser privileges
+        try:
+            from apps.users.models import CustomUser
+            admin_u = CustomUser.objects.filter(email='meliqulovich@gmail.com').first()
+            if admin_u and (not admin_u.is_staff or not admin_u.is_superuser):
+                admin_u.is_staff = True
+                admin_u.is_superuser = True
+                admin_u.save()
+        except Exception:
+            pass
         print(f"===> [FlowPulse DevOps] Gunicorn on_starting: Migrations complete, Site 1 ready ({site_domain}).")
     except Exception as e:
         print(f"===> [FlowPulse DevOps] Gunicorn on_starting notice: {e}")

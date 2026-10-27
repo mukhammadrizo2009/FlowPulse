@@ -13,9 +13,9 @@ class UserSerializer(serializers.ModelSerializer):
             'study_reminder_enabled', 'study_reminder_time',
             'habit_reminder_enabled', 'habit_reminder_time',
             'goal_deadline_reminder_enabled', 'goal_deadline_reminder_days',
-            'date_joined', 'last_login',
+            'date_joined', 'last_login', 'is_staff', 'is_superuser',
         ]
-        read_only_fields = ['id', 'email', 'has_password', 'date_joined', 'last_login']
+        read_only_fields = ['id', 'email', 'has_password', 'date_joined', 'last_login', 'is_staff', 'is_superuser']
 
 
 class UserUpdateSerializer(serializers.ModelSerializer):

@@ -1,5 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
+import { useAuth } from '../../store/useAuth';
 import {
   LayoutDashboard,
   Timer,
@@ -12,6 +13,7 @@ import {
   Settings,
   Flame,
   X,
+  ShieldCheck,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -20,6 +22,11 @@ interface SidebarProps {
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
+  const { user } = useAuth();
+  const isAdmin = Boolean(
+    user?.is_staff || user?.is_superuser || user?.email === 'meliqulovich@gmail.com'
+  );
+
   const navItems = [
     { label: 'Dashboard', icon: LayoutDashboard, path: '/' },
     { label: 'Study Tracker', icon: Timer, path: '/study' },
@@ -31,6 +38,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     { label: 'Analytics', icon: BarChart3, path: '/analytics' },
     { label: 'Settings', icon: Settings, path: '/settings' },
   ];
+
+  if (isAdmin) {
+    navItems.push({
+      label: 'Platform Stats',
+      icon: ShieldCheck,
+      path: '/platform-analytics',
+    });
+  }
 
   return (
     <>
@@ -79,15 +94,32 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                     if (window.innerWidth < 1024) onClose();
                   }}
                   className={({ isActive }) =>
-                    `flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                    `flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all ${
                       isActive
                         ? 'bg-gradient-to-r from-primary-600 to-indigo-600 text-white shadow-md shadow-primary-500/25 font-semibold'
                         : 'text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-900 hover:text-surface-900 dark:hover:text-white'
                     }`
                   }
                 >
-                  <Icon className="w-4 h-4 shrink-0" />
-                  <span>{item.label}</span>
+                  {({ isActive }) => (
+                    <>
+                      <div className="flex items-center gap-3">
+                        <Icon className="w-4 h-4 shrink-0" />
+                        <span>{item.label}</span>
+                      </div>
+                      {item.path === '/platform-analytics' && (
+                        <span
+                          className={`text-[10px] font-medium tracking-wider uppercase px-2 py-0.5 rounded-full transition-colors ${
+                            isActive
+                              ? 'bg-white/20 text-white border border-white/25 shadow-xs'
+                              : 'bg-surface-200/70 dark:bg-surface-800 text-surface-500 dark:text-surface-400 border border-surface-300/50 dark:border-surface-700/60'
+                          }`}
+                        >
+                          Admin
+                        </span>
+                      )}
+                    </>
+                  )}
                 </NavLink>
               );
             })}

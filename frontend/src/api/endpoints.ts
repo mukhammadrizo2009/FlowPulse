@@ -13,7 +13,8 @@ import type {
   DailyTask,
   Note,
   NotificationItem,
-  DashboardSummary
+  DashboardSummary,
+  PlatformStats
 } from '../types';
 
 // ================= AUTH =================
@@ -343,6 +344,10 @@ export const statisticsApi = {
   },
   getGoalsStats: async () => {
     const { data } = await apiClient.get('/statistics/goals/');
+    return data;
+  },
+  getPlatformStats: async () => {
+    const { data } = await apiClient.get<PlatformStats>('/statistics/platform/');
     return data;
   },
 };
