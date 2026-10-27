@@ -349,7 +349,7 @@ def platform_admin_stats(request):
     if not (user.is_staff or user.is_superuser or user.email == 'meliqulovich@gmail.com'):
         return Response({
             'error': 'Forbidden',
-            'detail': 'Faqat platforma administratorlari uchun ruxsat etilgan.'
+            'detail': 'Access restricted to platform administrators only.'
         }, status=403)
 
     now = timezone.now()

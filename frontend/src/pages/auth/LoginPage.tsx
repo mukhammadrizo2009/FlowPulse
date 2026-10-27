@@ -24,7 +24,7 @@ export const LoginPage: React.FC = () => {
     } catch (err: unknown) {
       const errObj = err as { response?: { data?: { detail?: string } } };
       setError(
-        errObj?.response?.data?.detail || 'Email yoki parol noto\'g\'ri. Iltimos qaytadan urinib ko\'ring.'
+        errObj?.response?.data?.detail || 'Invalid email or password. Please try again.'
       );
     } finally {
       setIsLoading(false);
@@ -43,10 +43,10 @@ export const LoginPage: React.FC = () => {
             FP
           </div>
           <h1 className="text-2xl font-extrabold tracking-tight text-surface-900 dark:text-white">
-            FlowPulse
+            Welcome to FlowPulse
           </h1>
           <p className="text-xs sm:text-sm text-surface-500 dark:text-surface-400 mt-1">
-            Hisobingizga kirish uchun ma'lumotlaringizni kiriting
+            Sign in to access your personal dashboard and habits
           </p>
         </div>
 
@@ -61,7 +61,7 @@ export const LoginPage: React.FC = () => {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-xs font-medium text-surface-700 dark:text-surface-300 mb-1.5">
-                Email manzil
+                Email Address
               </label>
               <div className="relative">
                 <Mail className="w-4 h-4 text-surface-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -70,7 +70,7 @@ export const LoginPage: React.FC = () => {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="nom@domain.com"
+                  placeholder="name@domain.com"
                   className="w-full pl-10 pr-4 py-2.5 text-sm rounded-xl bg-surface-100 dark:bg-surface-800/80 border border-surface-200 dark:border-surface-700/80 text-surface-900 dark:text-white placeholder-surface-400 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 transition-all"
                 />
               </div>
@@ -78,7 +78,7 @@ export const LoginPage: React.FC = () => {
 
             <div>
               <label className="block text-xs font-medium text-surface-700 dark:text-surface-300 mb-1.5">
-                Parol
+                Password
               </label>
               <div className="relative">
                 <Lock className="w-4 h-4 text-surface-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -107,19 +107,19 @@ export const LoginPage: React.FC = () => {
               isLoading={isLoading}
               rightIcon={<ArrowRight className="w-4 h-4" />}
             >
-              Kirish
+              Sign In
             </Button>
           </form>
 
           {/* Footer link */}
           <div className="mt-6 pt-5 border-t border-surface-200/70 dark:border-surface-800/80 text-center">
             <p className="text-xs text-surface-500 dark:text-surface-400">
-              Hisobingiz yo'qmi?{' '}
+              Don't have an account yet?{' '}
               <Link
                 to="/register"
                 className="font-semibold text-primary-600 dark:text-primary-400 hover:underline"
               >
-                Ro'yxatdan o'tish
+                Create Account
               </Link>
             </p>
           </div>
@@ -128,7 +128,7 @@ export const LoginPage: React.FC = () => {
         {/* Minimalist Security Badge */}
         <div className="flex items-center justify-center gap-1.5 mt-6 text-[11px] text-surface-400">
           <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
-          <span>Xavfsiz va shifrlangan seans nazorati</span>
+          <span>Secure multi-user session &amp; isolated storage</span>
         </div>
       </div>
     </div>

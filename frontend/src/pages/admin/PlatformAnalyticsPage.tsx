@@ -90,13 +90,13 @@ export const PlatformAnalyticsPage: React.FC = () => {
           <ShieldAlert className="w-8 h-8" />
         </div>
         <h2 className="text-2xl font-bold text-surface-900 dark:text-white mb-2">
-          Ruxsat Cheklangan
+          Access Restricted
         </h2>
         <p className="text-surface-600 dark:text-surface-400 max-w-md mb-6">
-          Ushbu sahifa faqat FlowPulse tizimi administratorlari uchun mo'ljallangan. Platforma statistikasini ko'rish uchun admin hisob bilan kiring.
+          This page is strictly reserved for FlowPulse system administrators. Please sign in with an administrator account to view platform statistics.
         </p>
         <Button onClick={() => (window.location.href = '/')}>
-          Bosh Sahifaga Qaytish
+          Back to Dashboard
         </Button>
       </div>
     );
@@ -110,7 +110,7 @@ export const PlatformAnalyticsPage: React.FC = () => {
           <ShieldCheck className="w-6 h-6 text-primary-500 absolute inset-0 m-auto" />
         </div>
         <p className="mt-4 text-sm text-surface-500 font-medium">
-          Platforma ko'rsatkichlari yuklanmoqda...
+          Loading platform metrics...
         </p>
       </div>
     );
@@ -131,13 +131,13 @@ export const PlatformAnalyticsPage: React.FC = () => {
           <div>
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-semibold mb-3">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-              Administrator Nazorat Paneli
+              Administrator Control Panel
             </div>
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-              FlowPulse Platforma Statistikasi
+              FlowPulse Platform Analytics
             </h1>
             <p className="text-surface-300 text-sm mt-1 max-w-xl">
-              Foydalanuvchilar soni, kunlik faollik, odatlar, o'rganish soatlari va tizimning to'liq metrikalari jonli ko'rinishda.
+              Live metrics on user growth, daily engagement, habit completion, study hours, and platform activity.
             </p>
           </div>
 
@@ -148,12 +148,12 @@ export const PlatformAnalyticsPage: React.FC = () => {
               className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 text-white text-sm font-semibold transition-all backdrop-blur-md hover:scale-105 active:scale-95 disabled:opacity-50"
             >
               <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-              Yangilash
+              Refresh
             </button>
             <div className="text-right hidden sm:block">
-              <div className="text-xs text-surface-400">Oxirgi sinxronizatsiya</div>
+              <div className="text-xs text-surface-400">Last synced</div>
               <div className="text-xs font-mono text-surface-200">
-                {data?.generated_at ? new Date(data.generated_at).toLocaleTimeString() : 'Hozir'}
+                {data?.generated_at ? new Date(data.generated_at).toLocaleTimeString() : 'Just now'}
               </div>
             </div>
           </div>
@@ -166,7 +166,7 @@ export const PlatformAnalyticsPage: React.FC = () => {
         <div className="p-6 rounded-2xl bg-surface-50 dark:bg-surface-900 border border-surface-200 dark:border-surface-800 shadow-sm relative overflow-hidden group hover:border-primary-500/40 transition-all">
           <div className="flex items-center justify-between mb-4">
             <span className="text-sm font-medium text-surface-500 dark:text-surface-400">
-              Jami Foydalanuvchilar
+              Total Registered Users
             </span>
             <div className="w-10 h-10 rounded-xl bg-primary-500/10 text-primary-500 flex items-center justify-center font-bold">
               <Users className="w-5 h-5" />
@@ -177,7 +177,7 @@ export const PlatformAnalyticsPage: React.FC = () => {
           </div>
           <div className="mt-2 flex items-center gap-1.5 text-xs text-emerald-500 font-semibold">
             <UserPlus className="w-3.5 h-3.5" />
-            <span>+{userStats?.new_7d || 0} yangi bu hafta</span>
+            <span>+{userStats?.new_7d || 0} new this week</span>
           </div>
         </div>
 
@@ -185,7 +185,7 @@ export const PlatformAnalyticsPage: React.FC = () => {
         <div className="p-6 rounded-2xl bg-surface-50 dark:bg-surface-900 border border-surface-200 dark:border-surface-800 shadow-sm relative overflow-hidden group hover:border-emerald-500/40 transition-all">
           <div className="flex items-center justify-between mb-4">
             <span className="text-sm font-medium text-surface-500 dark:text-surface-400">
-              Faol Foydalanuvchilar (Bugun)
+              Active Users (Today)
             </span>
             <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center font-bold">
               <UserCheck className="w-5 h-5" />
@@ -196,7 +196,7 @@ export const PlatformAnalyticsPage: React.FC = () => {
           </div>
           <div className="mt-2 flex items-center gap-1.5 text-xs text-surface-500 dark:text-surface-400">
             <Activity className="w-3.5 h-3.5 text-emerald-500" />
-            <span>Oxirgi 24 soat ichida faol</span>
+            <span>Active within last 24 hours</span>
           </div>
         </div>
 
@@ -204,7 +204,7 @@ export const PlatformAnalyticsPage: React.FC = () => {
         <div className="p-6 rounded-2xl bg-surface-50 dark:bg-surface-900 border border-surface-200 dark:border-surface-800 shadow-sm relative overflow-hidden group hover:border-indigo-500/40 transition-all">
           <div className="flex items-center justify-between mb-4">
             <span className="text-sm font-medium text-surface-500 dark:text-surface-400">
-              7 Kunlik Faol Userlar
+              7-Day Active Users
             </span>
             <div className="w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center font-bold">
               <TrendingUp className="w-5 h-5" />
@@ -215,7 +215,7 @@ export const PlatformAnalyticsPage: React.FC = () => {
           </div>
           <div className="mt-2 flex items-center gap-1.5 text-xs text-indigo-500 font-semibold">
             <ArrowUpRight className="w-3.5 h-3.5" />
-            <span>Haftalik faol auditoriya</span>
+            <span>Weekly active audience</span>
           </div>
         </div>
 
@@ -223,7 +223,7 @@ export const PlatformAnalyticsPage: React.FC = () => {
         <div className="p-6 rounded-2xl bg-surface-50 dark:bg-surface-900 border border-surface-200 dark:border-surface-800 shadow-sm relative overflow-hidden group hover:border-amber-500/40 transition-all">
           <div className="flex items-center justify-between mb-4">
             <span className="text-sm font-medium text-surface-500 dark:text-surface-400">
-              30 Kunlik Faol Userlar
+              30-Day Active Users
             </span>
             <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center font-bold">
               <Calendar className="w-5 h-5" />
@@ -234,7 +234,7 @@ export const PlatformAnalyticsPage: React.FC = () => {
           </div>
           <div className="mt-2 flex items-center gap-1.5 text-xs text-amber-500 font-semibold">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>Oylik umumiy qamrov</span>
+            <span>Monthly active audience</span>
           </div>
         </div>
       </div>
@@ -245,10 +245,10 @@ export const PlatformAnalyticsPage: React.FC = () => {
           <div>
             <h2 className="text-lg font-bold text-surface-900 dark:text-white flex items-center gap-2">
               <Activity className="w-5 h-5 text-primary-500" />
-              So'nggi 14 Kunlik Platforma Dinamikasi
+              14-Day Platform Trends
             </h2>
             <p className="text-xs text-surface-500 dark:text-surface-400 mt-1">
-              O'rganish soatlari, odatlarning bajarilishi va yangi foydalanuvchilar oqimi
+              Study hours, habit completions, and new user registrations
             </p>
           </div>
 
@@ -261,7 +261,7 @@ export const PlatformAnalyticsPage: React.FC = () => {
                   : 'text-surface-500 hover:text-surface-800 dark:hover:text-surface-200'
               }`}
             >
-              Faollik (Soat / Odatlar)
+              Activity (Hours / Habits)
             </button>
             <button
               onClick={() => setChartView('growth')}
@@ -271,7 +271,7 @@ export const PlatformAnalyticsPage: React.FC = () => {
                   : 'text-surface-500 hover:text-surface-800 dark:hover:text-surface-200'
               }`}
             >
-              Yangi Foydalanuvchilar
+              New Users &amp; Sleep
             </button>
           </div>
         </div>
@@ -306,7 +306,7 @@ export const PlatformAnalyticsPage: React.FC = () => {
                 <Area
                   type="monotone"
                   dataKey="study_hours"
-                  name="O'rganish (soat)"
+                  name="Study Time (Hours)"
                   stroke="#6366f1"
                   strokeWidth={2.5}
                   fillOpacity={1}
@@ -315,7 +315,7 @@ export const PlatformAnalyticsPage: React.FC = () => {
                 <Area
                   type="monotone"
                   dataKey="habit_completions"
-                  name="Bajarilgan odatlar"
+                  name="Completed Habits"
                   stroke="#10b981"
                   strokeWidth={2.5}
                   fillOpacity={1}
@@ -339,13 +339,13 @@ export const PlatformAnalyticsPage: React.FC = () => {
                 <Legend />
                 <Bar
                   dataKey="new_users"
-                  name="Yangi foydalanuvchilar"
+                  name="New Users"
                   fill="#3b82f6"
                   radius={[6, 6, 0, 0]}
                 />
                 <Bar
                   dataKey="sleep_logs"
-                  name="Uyqu yozuvlari"
+                  name="Sleep Records"
                   fill="#a855f7"
                   radius={[6, 6, 0, 0]}
                 />
@@ -364,26 +364,26 @@ export const PlatformAnalyticsPage: React.FC = () => {
               <Flame className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-bold text-surface-900 dark:text-white text-sm">Odatlar Moduli</h3>
-              <p className="text-xs text-surface-500">Kunlik odatlar intizomi</p>
+              <h3 className="font-bold text-surface-900 dark:text-white text-sm">Habits Module</h3>
+              <p className="text-xs text-surface-500">Daily habit discipline</p>
             </div>
           </div>
           <div className="space-y-2 pt-2 border-t border-surface-200 dark:border-surface-800 text-xs">
             <div className="flex justify-between py-1">
-              <span className="text-surface-500">Jami odatlar:</span>
-              <span className="font-bold text-surface-900 dark:text-white">{engagement?.habits.total_habits || 0} ta</span>
+              <span className="text-surface-500">Total habits:</span>
+              <span className="font-bold text-surface-900 dark:text-white">{engagement?.habits.total_habits || 0}</span>
             </div>
             <div className="flex justify-between py-1">
-              <span className="text-surface-500">Faol odatlar:</span>
-              <span className="font-bold text-emerald-500">{engagement?.habits.active_habits || 0} ta</span>
+              <span className="text-surface-500">Active habits:</span>
+              <span className="font-bold text-emerald-500">{engagement?.habits.active_habits || 0}</span>
             </div>
             <div className="flex justify-between py-1">
-              <span className="text-surface-500">Bugungi bajarilish:</span>
-              <span className="font-bold text-surface-900 dark:text-white">{engagement?.habits.completions_today || 0} marta</span>
+              <span className="text-surface-500">Completed today:</span>
+              <span className="font-bold text-surface-900 dark:text-white">{engagement?.habits.completions_today || 0}</span>
             </div>
             <div className="flex justify-between py-1">
-              <span className="text-surface-500">Umumiy bajarilish:</span>
-              <span className="font-bold text-surface-900 dark:text-white">{engagement?.habits.completions_total || 0} marta</span>
+              <span className="text-surface-500">All-time completions:</span>
+              <span className="font-bold text-surface-900 dark:text-white">{engagement?.habits.completions_total || 0}</span>
             </div>
           </div>
         </div>
@@ -395,22 +395,22 @@ export const PlatformAnalyticsPage: React.FC = () => {
               <BookOpen className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-bold text-surface-900 dark:text-white text-sm">O'rganish & Dars</h3>
-              <p className="text-xs text-surface-500">Fokus va ta'lim soatlari</p>
+              <h3 className="font-bold text-surface-900 dark:text-white text-sm">Study &amp; Focus</h3>
+              <p className="text-xs text-surface-500">Deep work and learning hours</p>
             </div>
           </div>
           <div className="space-y-2 pt-2 border-t border-surface-200 dark:border-surface-800 text-xs">
             <div className="flex justify-between py-1">
-              <span className="text-surface-500">Jami soat:</span>
-              <span className="font-bold text-indigo-500">{engagement?.study.total_hours || 0} soat</span>
+              <span className="text-surface-500">Total study:</span>
+              <span className="font-bold text-indigo-500">{engagement?.study.total_hours || 0} hrs</span>
             </div>
             <div className="flex justify-between py-1">
-              <span className="text-surface-500">Dars sessiyalari:</span>
-              <span className="font-bold text-surface-900 dark:text-white">{engagement?.study.total_sessions || 0} ta</span>
+              <span className="text-surface-500">Study sessions:</span>
+              <span className="font-bold text-surface-900 dark:text-white">{engagement?.study.total_sessions || 0}</span>
             </div>
             <div className="flex justify-between py-1">
-              <span className="text-surface-500">Bugungi soat:</span>
-              <span className="font-bold text-surface-900 dark:text-white">{engagement?.study.today_hours || 0} soat</span>
+              <span className="text-surface-500">Study today:</span>
+              <span className="font-bold text-surface-900 dark:text-white">{engagement?.study.today_hours || 0} hrs</span>
             </div>
           </div>
         </div>
@@ -422,18 +422,18 @@ export const PlatformAnalyticsPage: React.FC = () => {
               <Moon className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-bold text-surface-900 dark:text-white text-sm">Uyqu Tizimi</h3>
-              <p className="text-xs text-surface-500">Tiklanish va dam olish</p>
+              <h3 className="font-bold text-surface-900 dark:text-white text-sm">Sleep Tracker</h3>
+              <p className="text-xs text-surface-500">Rest and recovery logs</p>
             </div>
           </div>
           <div className="space-y-2 pt-2 border-t border-surface-200 dark:border-surface-800 text-xs">
             <div className="flex justify-between py-1">
-              <span className="text-surface-500">Jami yozuvlar:</span>
-              <span className="font-bold text-surface-900 dark:text-white">{engagement?.sleep.total_logs || 0} ta</span>
+              <span className="text-surface-500">Total logs:</span>
+              <span className="font-bold text-surface-900 dark:text-white">{engagement?.sleep.total_logs || 0}</span>
             </div>
             <div className="flex justify-between py-1">
-              <span className="text-surface-500">O'rtacha uyqu:</span>
-              <span className="font-bold text-purple-500">{engagement?.sleep.avg_hours || 0} soat/kun</span>
+              <span className="text-surface-500">Average sleep:</span>
+              <span className="font-bold text-purple-500">{engagement?.sleep.avg_hours || 0} hrs/day</span>
             </div>
           </div>
         </div>
@@ -445,26 +445,26 @@ export const PlatformAnalyticsPage: React.FC = () => {
               <Target className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-bold text-surface-900 dark:text-white text-sm">Maqsadlar & Rejalar</h3>
-              <p className="text-xs text-surface-500">Muvaffaqiyatlar va vazifalar</p>
+              <h3 className="font-bold text-surface-900 dark:text-white text-sm">Goals &amp; Planning</h3>
+              <p className="text-xs text-surface-500">Milestones and tasks</p>
             </div>
           </div>
           <div className="space-y-2 pt-2 border-t border-surface-200 dark:border-surface-800 text-xs">
             <div className="flex justify-between py-1">
-              <span className="text-surface-500">Jami maqsadlar:</span>
-              <span className="font-bold text-surface-900 dark:text-white">{engagement?.goals_and_plans.total_goals || 0} ta</span>
+              <span className="text-surface-500">Total goals:</span>
+              <span className="font-bold text-surface-900 dark:text-white">{engagement?.goals_and_plans.total_goals || 0}</span>
             </div>
             <div className="flex justify-between py-1">
-              <span className="text-surface-500">Erishilgan maqsadlar:</span>
-              <span className="font-bold text-emerald-500">{engagement?.goals_and_plans.completed_goals || 0} ta</span>
+              <span className="text-surface-500">Completed goals:</span>
+              <span className="font-bold text-emerald-500">{engagement?.goals_and_plans.completed_goals || 0}</span>
             </div>
             <div className="flex justify-between py-1">
-              <span className="text-surface-500">Tuzilgan rejalar:</span>
-              <span className="font-bold text-surface-900 dark:text-white">{engagement?.goals_and_plans.total_plans || 0} ta</span>
+              <span className="text-surface-500">Created plans:</span>
+              <span className="font-bold text-surface-900 dark:text-white">{engagement?.goals_and_plans.total_plans || 0}</span>
             </div>
             <div className="flex justify-between py-1">
-              <span className="text-surface-500">Bajarilgan topshiriqlar:</span>
-              <span className="font-bold text-amber-500">{engagement?.goals_and_plans.completed_plan_tasks || 0} ta</span>
+              <span className="text-surface-500">Completed tasks:</span>
+              <span className="font-bold text-amber-500">{engagement?.goals_and_plans.completed_plan_tasks || 0}</span>
             </div>
           </div>
         </div>
@@ -476,10 +476,10 @@ export const PlatformAnalyticsPage: React.FC = () => {
           <div>
             <h2 className="text-lg font-bold text-surface-900 dark:text-white flex items-center gap-2">
               <Users className="w-5 h-5 text-primary-500" />
-              Foydalanuvchilar Ro'yxati va Faolligi ({filteredUsers.length})
+              User Directory &amp; Engagement ({filteredUsers.length})
             </h2>
             <p className="text-xs text-surface-500 dark:text-surface-400 mt-1">
-              Platformaga a'zo bo'lgan foydalanuvchilar, ularning roli, oxirgi kirishi va faoliyati
+              Registered platform users, assigned roles, last active timestamp, and activity summaries
             </p>
           </div>
 
@@ -487,7 +487,7 @@ export const PlatformAnalyticsPage: React.FC = () => {
             <Search className="w-4 h-4 text-surface-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
-              placeholder="Email yoki ism bo'yicha qidirish..."
+              placeholder="Search by email or name..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-2 text-xs rounded-xl bg-surface-100 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 text-surface-900 dark:text-white placeholder-surface-400 focus:outline-none focus:ring-2 focus:ring-primary-500"
@@ -499,19 +499,19 @@ export const PlatformAnalyticsPage: React.FC = () => {
           <table className="w-full text-left text-xs">
             <thead>
               <tr className="border-b border-surface-200 dark:border-surface-800 text-surface-400 uppercase tracking-wider font-semibold">
-                <th className="py-3 px-4">Foydalanuvchi</th>
-                <th className="py-3 px-4">Roli</th>
-                <th className="py-3 px-4">Holati</th>
-                <th className="py-3 px-4">Qo'shilgan Sana</th>
-                <th className="py-3 px-4">Oxirgi Kirish</th>
-                <th className="py-3 px-4 text-right">Odatlar / O'rganish</th>
+                <th className="py-3 px-4">User</th>
+                <th className="py-3 px-4">Role</th>
+                <th className="py-3 px-4">Status</th>
+                <th className="py-3 px-4">Joined Date</th>
+                <th className="py-3 px-4">Last Login</th>
+                <th className="py-3 px-4 text-right">Habits / Study Hours</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-surface-100 dark:divide-surface-800/60">
               {filteredUsers.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="text-center py-8 text-surface-400">
-                    Hech qanday foydalanuvchi topilmadi
+                    No users found matching your search
                   </td>
                 </tr>
               ) : (
@@ -555,7 +555,7 @@ export const PlatformAnalyticsPage: React.FC = () => {
                           </span>
                         ) : (
                           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-surface-200/60 dark:bg-surface-800 text-surface-600 dark:text-surface-300">
-                            Foydalanuvchi
+                            User
                           </span>
                         )}
                       </td>
@@ -564,12 +564,12 @@ export const PlatformAnalyticsPage: React.FC = () => {
                         {u.is_active ? (
                           <span className="inline-flex items-center gap-1.5 text-emerald-500 font-medium">
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                            Faol
+                            Active
                           </span>
                         ) : (
                           <span className="inline-flex items-center gap-1.5 text-surface-400">
                             <span className="w-1.5 h-1.5 rounded-full bg-surface-400" />
-                            Nofaol
+                            Inactive
                           </span>
                         )}
                       </td>
@@ -585,14 +585,14 @@ export const PlatformAnalyticsPage: React.FC = () => {
                             {new Date(u.last_login).toLocaleString()}
                           </div>
                         ) : (
-                          <span className="text-surface-400 italic">Hali kirmagan</span>
+                          <span className="text-surface-400 italic">Never logged in</span>
                         )}
                       </td>
 
                       <td className="py-3.5 px-4 text-right font-medium">
-                        <span className="text-emerald-500">{u.habits_count} odat</span>
+                        <span className="text-emerald-500">{u.habits_count} habits</span>
                         <span className="mx-1.5 text-surface-300 dark:text-surface-700">|</span>
-                        <span className="text-indigo-500">{u.study_hours} soat</span>
+                        <span className="text-indigo-500">{u.study_hours} hrs</span>
                       </td>
                     </tr>
                   );
