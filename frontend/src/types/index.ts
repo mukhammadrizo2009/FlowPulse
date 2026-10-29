@@ -139,9 +139,11 @@ export interface StudySession {
   goal?: number | null;
   goal_title?: string;
   duration_minutes: number;
-  started_at: string;
+  date?: string;
+  description?: string;
+  started_at?: string;
   ended_at?: string | null;
-  session_type: 'pomodoro' | 'stopwatch' | 'manual';
+  session_type?: 'pomodoro' | 'stopwatch' | 'manual';
   notes?: string;
 }
 

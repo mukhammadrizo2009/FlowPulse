@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../store/useAuth';
 import { dashboardApi, habitsApi, plansApi } from '../../api/endpoints';
+import { formatLocalDate } from '../../utils/date';
 import {
   Timer,
   Moon,
   CheckCircle2,
+  Minus,
   Target,
   ArrowUpRight,
   Plus,
@@ -47,6 +49,8 @@ interface DashboardData {
       name: string;
       description?: string;
       completed_today: boolean;
+      today_status?: 'none' | 'partial' | 'done';
+      is_partial?: boolean;
       current_streak: number;
     }[];
   };
@@ -86,7 +90,8 @@ export const DashboardPage: React.FC = () => {
 
   const fetchDashboard = async () => {
     try {
-      const res = await dashboardApi.getSummary();
+      const todayStr = formatLocalDate(new Date());
+      const res = await dashboardApi.getSummary({ date: todayStr });
       setData(res as unknown as DashboardData);
     } catch {
       // ignore
@@ -101,13 +106,26 @@ export const DashboardPage: React.FC = () => {
 
   const handleToggleHabit = async (habitId: number) => {
     if (!data) return;
+    const currentItem = data.habits?.habits?.find((h) => h.id === habitId);
+    const curStatus = currentItem?.today_status ?? (currentItem?.completed_today ? 'done' : 'none');
+    const nextStatus: 'none' | 'partial' | 'done' =
+      curStatus === 'none' ? 'partial' : curStatus === 'partial' ? 'done' : 'none';
+    const nextCompleted = nextStatus === 'done';
+
     try {
       // Optimistic UI update
       setData((prev) => {
         if (!prev) return prev;
         const currentHabits = Array.isArray(prev.habits?.habits) ? prev.habits.habits : [];
         const updatedHabits = currentHabits.map((h) =>
-          h.id === habitId ? { ...h, completed_today: !h.completed_today } : h
+          h.id === habitId
+            ? {
+                ...h,
+                today_status: nextStatus,
+                completed_today: nextCompleted,
+                is_partial: nextStatus === 'partial',
+              }
+            : h
         );
         const completedCount = updatedHabits.filter((h) => h.completed_today).length;
         return {
@@ -121,7 +139,7 @@ export const DashboardPage: React.FC = () => {
           },
         };
       });
-      await habitsApi.toggleToday(habitId);
+      await habitsApi.setStatusToday(habitId, nextStatus);
     } catch {
       fetchDashboard();
     }
@@ -450,49 +468,66 @@ export const DashboardPage: React.FC = () => {
                   No habits set up yet. Create your first habit!
                 </p>
               ) : (
-                habitItems.map((h) => (
-                  <div
-                    key={h.id}
-                    onClick={() => handleToggleHabit(h.id)}
-                    className={`flex items-center justify-between p-3.5 rounded-2xl border transition-all cursor-pointer ${
-                      h.completed_today
-                        ? 'bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-300 dark:border-emerald-800/50'
-                        : 'bg-surface-100/60 dark:bg-surface-800/40 border-surface-200 dark:border-surface-700/60 hover:border-primary-400'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div
-                        className={`w-6 h-6 rounded-lg border flex items-center justify-center transition-colors ${
-                          h.completed_today
-                            ? 'bg-emerald-500 border-emerald-500 text-white'
-                            : 'border-surface-400 dark:border-surface-600'
-                        }`}
-                      >
-                        {h.completed_today && <CheckCircle2 className="w-4 h-4" />}
-                      </div>
-                      <div>
-                        <p
-                          className={`text-sm font-semibold ${
-                            h.completed_today
-                              ? 'line-through text-surface-500 dark:text-surface-400'
-                              : 'text-surface-900 dark:text-white'
+                habitItems.map((h) => {
+                  const isDone = h.today_status === 'done' || (h.completed_today && !h.is_partial);
+                  const isPartial = h.today_status === 'partial' || h.is_partial;
+
+                  return (
+                    <div
+                      key={h.id}
+                      onClick={() => handleToggleHabit(h.id)}
+                      className={`flex items-center justify-between p-3.5 rounded-2xl border transition-all cursor-pointer ${
+                        isDone
+                          ? 'bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-300 dark:border-emerald-800/50'
+                          : isPartial
+                          ? 'bg-amber-50/50 dark:bg-amber-950/20 border-amber-300 dark:border-amber-800/50'
+                          : 'bg-surface-100/60 dark:bg-surface-800/40 border-surface-200 dark:border-surface-700/60 hover:border-primary-400'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div
+                          className={`w-6 h-6 rounded-lg border flex items-center justify-center transition-colors ${
+                            isDone
+                              ? 'bg-emerald-500 border-emerald-500 text-white'
+                              : isPartial
+                              ? 'bg-amber-400 border-amber-400 text-white'
+                              : 'border-surface-400 dark:border-surface-600'
                           }`}
                         >
-                          {h.name}
-                        </p>
-                        {h.description && (
-                          <p className="text-xs text-surface-400 truncate max-w-sm">
-                            {h.description}
+                          {isDone && <CheckCircle2 className="w-4 h-4" />}
+                          {isPartial && <Minus className="w-3.5 h-3.5 stroke-[3]" />}
+                        </div>
+                        <div>
+                          <p
+                            className={`text-sm font-semibold ${
+                              isDone
+                                ? 'line-through text-surface-500 dark:text-surface-400'
+                                : 'text-surface-900 dark:text-white'
+                            }`}
+                          >
+                            {h.name}
                           </p>
+                          {h.description && (
+                            <p className="text-xs text-surface-400 truncate max-w-sm">
+                              {h.description}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        {isPartial && (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950 text-amber-600 dark:text-amber-400">
+                            Partial
+                          </span>
                         )}
+                        <div className="flex items-center gap-1.5 text-amber-500 text-xs font-semibold">
+                          <span>{h.current_streak}d streak</span>
+                        </div>
                       </div>
                     </div>
-
-                    <div className="flex items-center gap-1.5 text-amber-500 text-xs font-semibold">
-                      <span>{h.current_streak}d streak</span>
-                    </div>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
           </div>

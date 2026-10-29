@@ -70,8 +70,8 @@ function extractResults<T>(data: unknown): T[] {
 
 // ================= DASHBOARD =================
 export const dashboardApi = {
-  getSummary: async () => {
-    const { data } = await apiClient.get<DashboardSummary>('/dashboard/');
+  getSummary: async (params?: { date?: string }) => {
+    const { data } = await apiClient.get<DashboardSummary>('/dashboard/', { params });
     return data;
   },
 };

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { plansApi } from '../../api/endpoints';
+import { formatLocalDate } from '../../utils/date';
 import type { DailyPlan, DailyTask } from '../../types';
 import { Button } from '../../components/ui/Button';
 import {
@@ -23,27 +24,86 @@ export const PlansPage: React.FC = () => {
   const [newItemTitle, setNewItemTitle] = useState('');
   const [isAdding, setIsAdding] = useState(false);
 
-  const dateStr = currentDate.toISOString().split('T')[0];
+  const dateStr = formatLocalDate(currentDate);
+
+  // Helper: get Monday of the current week
+  const getWeekStart = (date: Date) => {
+    const d = new Date(date);
+    const day = d.getDay();
+    const diff = day === 0 ? -6 : 1 - day; // Monday
+    d.setDate(d.getDate() + diff);
+    return d;
+  };
+
+  const getWeekEnd = (date: Date) => {
+    const start = getWeekStart(date);
+    const end = new Date(start);
+    end.setDate(start.getDate() + 6);
+    return end;
+  };
 
   const fetchPlan = async () => {
     setIsLoading(true);
     try {
+      const queryDate =
+        periodType === 'weekly'
+          ? formatLocalDate(getWeekStart(currentDate))
+          : dateStr;
+
       const plans = await plansApi.listPlans({
         plan_type: periodType,
-        ...(periodType === 'daily' ? { date: dateStr } : {}),
+        period_type: periodType,
+        ...(periodType === 'daily' || periodType === 'weekly' ? { date: queryDate } : {}),
+        ...(periodType === 'monthly'
+          ? { date: `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-01` }
+          : {}),
+        ...(periodType === 'yearly'
+          ? { date: `${currentDate.getFullYear()}-01-01` }
+          : {}),
       });
+
       if (plans && plans.length > 0) {
-        const first = plans[0];
-        const rawTasks = Array.isArray(first.tasks)
-          ? first.tasks
-          : Array.isArray((first as unknown as { items?: DailyTask[] }).items)
-          ? (first as unknown as { items: DailyTask[] }).items
+        // Find plan that already has tasks, or fallback to the most recent one
+        const chosen =
+          plans.find((p) => {
+            const rawTasks = Array.isArray(p.tasks)
+              ? p.tasks
+              : Array.isArray((p as unknown as { items?: DailyTask[] }).items)
+              ? (p as unknown as { items: DailyTask[] }).items
+              : [];
+            return rawTasks.length > 0;
+          }) || plans[0];
+
+        const rawTasks = Array.isArray(chosen.tasks)
+          ? chosen.tasks
+          : Array.isArray((chosen as unknown as { items?: DailyTask[] }).items)
+          ? (chosen as unknown as { items: DailyTask[] }).items
           : [];
-        setPlan({ ...first, tasks: rawTasks });
+        setPlan({ ...chosen, tasks: rawTasks });
       } else {
         // Create an empty plan for this period
+        const startDate =
+          periodType === 'weekly'
+            ? formatLocalDate(getWeekStart(currentDate))
+            : periodType === 'monthly'
+            ? formatLocalDate(new Date(currentDate.getFullYear(), currentDate.getMonth(), 1))
+            : periodType === 'yearly'
+            ? formatLocalDate(new Date(currentDate.getFullYear(), 0, 1))
+            : dateStr;
+        const endDate =
+          periodType === 'weekly'
+            ? formatLocalDate(getWeekEnd(currentDate))
+            : periodType === 'monthly'
+            ? formatLocalDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0))
+            : periodType === 'yearly'
+            ? formatLocalDate(new Date(currentDate.getFullYear(), 11, 31))
+            : dateStr;
+
         const newPlan = await plansApi.createPlan({
-          date: dateStr,
+          period_type: periodType,
+          start_date: startDate,
+          end_date: endDate,
+          date: startDate,
           title: `${periodType.charAt(0).toUpperCase() + periodType.slice(1)} Plan — ${dateStr}`,
           tasks: [],
         } as unknown as Partial<DailyPlan>);
@@ -163,22 +223,6 @@ export const PlansPage: React.FC = () => {
       next.setDate(next.getDate() + 1);
     }
     setCurrentDate(next);
-  };
-
-  // Helper: get Monday of the current week
-  const getWeekStart = (date: Date) => {
-    const d = new Date(date);
-    const day = d.getDay();
-    const diff = day === 0 ? -6 : 1 - day; // Monday
-    d.setDate(d.getDate() + diff);
-    return d;
-  };
-
-  const getWeekEnd = (date: Date) => {
-    const start = getWeekStart(date);
-    const end = new Date(start);
-    end.setDate(start.getDate() + 6);
-    return end;
   };
 
   const handleToday = () => {

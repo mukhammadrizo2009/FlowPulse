@@ -17,7 +17,14 @@ from ..goals.models import Goal
 def dashboard(request):
     """Return a summary of the user's activity for the dashboard."""
     user = request.user
-    today = timezone.now().date()
+    date_param = request.query_params.get('date')
+    if date_param:
+        try:
+            today = datetime.date.fromisoformat(date_param)
+        except ValueError:
+            today = timezone.now().date()
+    else:
+        today = timezone.now().date()
     
     # Today's study time
     today_study = StudyRecord.objects.filter(
@@ -60,14 +67,19 @@ def dashboard(request):
     habit_list = []
     completed_count = 0
     for h in active_habits:
-        is_done = h.completions.filter(completion_date=today).exists()
+        comp = h.completions.filter(completion_date=today).first()
+        status_val = comp.status if comp else 'none'
+        is_done = (status_val == 'done')
+        is_partial = (status_val == 'partial')
         if is_done:
             completed_count += 1
         habit_list.append({
             'id': h.id,
             'name': h.name,
             'description': h.description,
+            'today_status': status_val,
             'completed_today': is_done,
+            'is_partial': is_partial,
             'current_streak': h.current_streak,
         })
     habits_data = {
@@ -77,12 +89,20 @@ def dashboard(request):
         'habits': habit_list,
     }
 
-    # Today's plan
-    today_plan = Plan.objects.filter(
+    # Today's plan - prefer plan with items if multiple exist for today
+    today_plans = Plan.objects.filter(
         owner=user,
         period_type='daily',
         start_date=today,
-    ).prefetch_related('items').first()
+    ).prefetch_related('items').order_by('-updated_at', '-id')
+    
+    today_plan = None
+    for p in today_plans:
+        if p.items.exists():
+            today_plan = p
+            break
+    if not today_plan and today_plans.exists():
+        today_plan = today_plans.first()
     
     today_plan_data = None
     if today_plan:

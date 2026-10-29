@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { studyApi, goalsApi } from '../../api/endpoints';
+import { formatLocalDate } from '../../utils/date';
 import type { StudySession, Goal } from '../../types';
 import { Button } from '../../components/ui/Button';
 import { Modal } from '../../components/ui/Modal';
@@ -32,8 +33,8 @@ export const StudyTrackerPage: React.FC = () => {
   // Manual Log Modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [manualSubject, setManualSubject] = useState('');
-  const [manualDuration, setManualDuration] = useState(45);
-  const [manualDate, setManualDate] = useState(() => new Date().toISOString().split('T')[0]);
+  const [manualDuration, setManualDuration] = useState<number | ''>(45);
+  const [manualDate, setManualDate] = useState(() => formatLocalDate(new Date()));
   const [manualGoalId, setManualGoalId] = useState<number | ''>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -88,7 +89,7 @@ export const StudyTrackerPage: React.FC = () => {
   const handleTimerComplete = async () => {
     if (mode === 'pomodoro') {
       const durationMins = 25;
-      const today = new Date().toISOString().split('T')[0];
+      const today = formatLocalDate(new Date());
       try {
         await studyApi.createRecord({
           study_date: today,
@@ -113,7 +114,7 @@ export const StudyTrackerPage: React.FC = () => {
   const handleStopStopwatch = async () => {
     setIsRunning(false);
     const durationMins = Math.max(1, Math.round(stopwatchSeconds / 60));
-    const today = new Date().toISOString().split('T')[0];
+    const today = formatLocalDate(new Date());
 
     if (stopwatchSeconds >= 60) {
       try {
@@ -147,13 +148,14 @@ export const StudyTrackerPage: React.FC = () => {
 
   const handleCreateManualSession = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!manualSubject.trim() || manualDuration <= 0) return;
+    const durNum = Number(manualDuration);
+    if (!manualSubject.trim() || !durNum || durNum <= 0) return;
 
     setIsSubmitting(true);
     try {
       await studyApi.createRecord({
         study_date: manualDate,
-        duration_minutes: Number(manualDuration),
+        duration_minutes: durNum,
         subject: manualSubject.trim(),
         goal: manualGoalId ? Number(manualGoalId) : null,
       });
@@ -204,7 +206,11 @@ export const StudyTrackerPage: React.FC = () => {
         </div>
 
         <Button
-          onClick={() => setIsModalOpen(true)}
+          onClick={() => {
+            setManualDuration(45);
+            setManualDate(formatLocalDate(new Date()));
+            setIsModalOpen(true);
+          }}
           leftIcon={<Plus className="w-4 h-4" />}
         >
           Log Study Session
@@ -390,9 +396,11 @@ export const StudyTrackerPage: React.FC = () => {
               <tbody className="divide-y divide-surface-100 dark:divide-surface-800">
                 {sessions.map((s) => (
                   <tr key={s.id} className="hover:bg-surface-100/50 dark:hover:bg-surface-800/40">
-                    <td className="py-3 px-4 font-mono text-surface-500">{s.started_at || 'Today'}</td>
+                    <td className="py-3 px-4 font-mono text-surface-500">
+                      {s.date || s.started_at || 'Today'}
+                    </td>
                     <td className="py-3 px-4 font-semibold text-surface-900 dark:text-white">
-                      {s.subject_name || s.notes || 'Focused Study'}
+                      {s.description || s.subject_name || s.goal_title || s.notes || 'Focused Study'}
                     </td>
                     <td className="py-3 px-4 font-bold text-primary-600 dark:text-primary-400">
                       {Math.floor(s.duration_minutes / 60) > 0 &&
@@ -448,8 +456,12 @@ export const StudyTrackerPage: React.FC = () => {
                 min="1"
                 max="1440"
                 required
+                placeholder="45"
                 value={manualDuration}
-                onChange={(e) => setManualDuration(Number(e.target.value))}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setManualDuration(val === '' ? '' : Number(val));
+                }}
                 className="w-full px-3.5 py-2 text-sm rounded-xl bg-surface-100 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 text-surface-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
               />
             </div>

@@ -5,12 +5,16 @@ from .models import StudyRecord
 
 class StudyRecordSerializer(serializers.ModelSerializer):
     goal_title = serializers.SerializerMethodField()
+    subject_name = serializers.SerializerMethodField()
+    notes = serializers.CharField(source='description', read_only=True)
+    started_at = serializers.SerializerMethodField()
 
     class Meta:
         model = StudyRecord
         fields = [
             'id', 'date', 'duration_minutes', 'goal', 'goal_title',
-            'description', 'created_at', 'updated_at',
+            'description', 'subject_name', 'notes', 'started_at',
+            'created_at', 'updated_at',
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
 
@@ -26,6 +30,12 @@ class StudyRecordSerializer(serializers.ModelSerializer):
 
     def get_goal_title(self, obj):
         return obj.goal.title if obj.goal else None
+
+    def get_subject_name(self, obj):
+        return obj.description or (obj.goal.title if obj.goal else '')
+
+    def get_started_at(self, obj):
+        return str(obj.date)
 
     def validate_goal(self, value):
         if value and value.owner != self.context['request'].user:

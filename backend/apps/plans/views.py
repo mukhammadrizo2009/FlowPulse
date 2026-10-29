@@ -35,7 +35,9 @@ class PlanViewSet(viewsets.ModelViewSet):
             qs = qs.filter(start_date__year=year)
         if month:
             qs = qs.filter(start_date__month=month)
-        return qs
+
+        from django.db.models import Count
+        return qs.annotate(items_count=Count('items')).order_by('-start_date', '-items_count', '-updated_at', '-id')
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
