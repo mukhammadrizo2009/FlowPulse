@@ -444,7 +444,7 @@ export const DashboardPage: React.FC = () => {
           </div>
 
           {/* Habit Quick-Check List */}
-          <div className="p-6 rounded-3xl bg-surface-50 dark:bg-surface-900 border border-surface-200 dark:border-surface-800 shadow-sm">
+          <div className="p-4 sm:p-6 rounded-3xl bg-surface-50 dark:bg-surface-900 border border-surface-200 dark:border-surface-800 shadow-sm">
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h3 className="font-bold text-base text-surface-900 dark:text-white">
@@ -476,7 +476,7 @@ export const DashboardPage: React.FC = () => {
                     <div
                       key={h.id}
                       onClick={() => handleToggleHabit(h.id)}
-                      className={`flex items-center justify-between p-3.5 rounded-2xl border transition-all cursor-pointer ${
+                      className={`flex items-center justify-between gap-2.5 p-3 sm:p-3.5 rounded-2xl border transition-all cursor-pointer ${
                         isDone
                           ? 'bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-300 dark:border-emerald-800/50'
                           : isPartial
@@ -484,9 +484,9 @@ export const DashboardPage: React.FC = () => {
                           : 'bg-surface-100/60 dark:bg-surface-800/40 border-surface-200 dark:border-surface-700/60 hover:border-primary-400'
                       }`}
                     >
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
                         <div
-                          className={`w-6 h-6 rounded-lg border flex items-center justify-center transition-colors ${
+                          className={`w-6 h-6 rounded-lg border flex items-center justify-center shrink-0 transition-colors ${
                             isDone
                               ? 'bg-emerald-500 border-emerald-500 text-white'
                               : isPartial
@@ -497,9 +497,9 @@ export const DashboardPage: React.FC = () => {
                           {isDone && <CheckCircle2 className="w-4 h-4" />}
                           {isPartial && <Minus className="w-3.5 h-3.5 stroke-[3]" />}
                         </div>
-                        <div>
+                        <div className="min-w-0 flex-1">
                           <p
-                            className={`text-sm font-semibold ${
+                            className={`text-xs sm:text-sm font-semibold truncate ${
                               isDone
                                 ? 'line-through text-surface-500 dark:text-surface-400'
                                 : 'text-surface-900 dark:text-white'
@@ -508,20 +508,20 @@ export const DashboardPage: React.FC = () => {
                             {h.name}
                           </p>
                           {h.description && (
-                            <p className="text-xs text-surface-400 truncate max-w-sm">
+                            <p className="text-[11px] sm:text-xs text-surface-400 truncate mt-0.5">
                               {h.description}
                             </p>
                           )}
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
                         {isPartial && (
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950 text-amber-600 dark:text-amber-400">
+                          <span className="text-[10px] font-bold px-1.5 sm:px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950 text-amber-600 dark:text-amber-400 shrink-0">
                             Partial
                           </span>
                         )}
-                        <div className="flex items-center gap-1.5 text-amber-500 text-xs font-semibold">
+                        <div className="flex items-center gap-1 text-amber-500 text-[11px] sm:text-xs font-semibold whitespace-nowrap shrink-0">
                           <span>{h.current_streak}d streak</span>
                         </div>
                       </div>
@@ -536,7 +536,7 @@ export const DashboardPage: React.FC = () => {
         {/* Right Col: Today's Plan & Active Goals */}
         <div className="space-y-6">
           {/* Today's Plan Checklist */}
-          <div className="p-6 rounded-3xl bg-surface-50 dark:bg-surface-900 border border-surface-200 dark:border-surface-800 shadow-sm">
+          <div className="p-4 sm:p-6 rounded-3xl bg-surface-50 dark:bg-surface-900 border border-surface-200 dark:border-surface-800 shadow-sm">
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-bold text-base text-surface-900 dark:text-white">
                 Today&apos;s Plan
@@ -577,7 +577,7 @@ export const DashboardPage: React.FC = () => {
                       {item.is_completed && <CheckCircle2 className="w-3 h-3" />}
                     </div>
                     <span
-                      className={`text-xs ${
+                      className={`text-xs break-words min-w-0 flex-1 ${
                         item.is_completed
                           ? 'line-through text-surface-400'
                           : 'text-surface-800 dark:text-surface-200 font-medium'
